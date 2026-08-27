@@ -1,0 +1,17 @@
+.application-nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.application-brand {
+  display: inline-flex;
+  align-items: center;
+}
+
+.application-brand-logo {
+  display: block;
+  width: 10rem;
+  height: 2rem;
+}
