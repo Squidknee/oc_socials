@@ -27,7 +27,7 @@ export default function Login() {
 
   return (
     <div style={{ padding: '1rem', maxWidth: 360, margin: '2rem auto' }}>
-      <h1>Log In</h1>
+      <h1 className="login-title">Log In</h1>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <label>
           Email
