@@ -35,7 +35,7 @@
 .tw-post-body { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.35rem; }
 
 .tw-post-header { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; font-size: 0.92rem; }
-.tw-post-name { font-weight: 700; color: inherit; text-decoration: none; }
+.tw-post-name { font-weight: 700; color: inherit; text-decoration: none; line-height: 1; }
 .tw-post-handle, .tw-post-meta { color: #536471; }
 .tw-post-handle { text-decoration: none; }
 

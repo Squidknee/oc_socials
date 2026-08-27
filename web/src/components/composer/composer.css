@@ -10,7 +10,7 @@
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   padding: 1.1rem;
-  margin-bottom: 1.25rem;
+  margin: 0 auto 1.25rem;
   font-family: system-ui, sans-serif;
   color: #262626;
   display: flex;
@@ -38,6 +38,21 @@
   background: #fff;
   font-family: system-ui, sans-serif;
 }
+.composer-upload-btn {
+  flex-shrink: 0;
+  background: #f3f4f6;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.82rem;
+  font-family: system-ui, sans-serif;
+  color: #262626;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.composer-upload-btn:hover { background: #e9eaec; }
+.composer-upload-btn:disabled { color: #8e8e8e; cursor: default; }
+
 .composer-remove-media {
   background: none;
   border: none;

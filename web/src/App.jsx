@@ -11,6 +11,7 @@ import WorldFeed from './pages/WorldFeed.jsx';
 import CreateCharacter from './pages/CreateCharacter.jsx';
 import CharacterProfile from './pages/CharacterProfile.jsx';
 import PlatformAccountProfile from './pages/PlatformAccountProfile.jsx';
+import PlatformFeedPage from './pages/PlatformFeedPage.jsx';
 
 function NavBar() {
   const { user, signOut } = useAuth();
@@ -74,6 +75,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <CreateCharacter />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/worlds/:worldId/platforms/:slug"
+              element={
+                <RequireAuth>
+                  <PlatformFeedPage />
                 </RequireAuth>
               }
             />

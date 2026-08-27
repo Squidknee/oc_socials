@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient.js';
+import UploadButton from '../UploadButton.jsx';
 
 // Edits a platform_accounts row directly — handle/display name/avatar/bio
 // are already independently editable per platform per 0007's design, this
@@ -44,7 +45,7 @@ export default function EditAccountForm({ account, onSaved, onCancel }) {
   }
 
   return (
-    <form className="panel" style={{ maxWidth: 420, marginBottom: '1.25rem' }} onSubmit={handleSubmit}>
+    <form className="panel" style={{ maxWidth: 420, margin: '0 auto 1.25rem' }} onSubmit={handleSubmit}>
       <h2 className="panel-title" style={{ fontSize: '1.2rem' }}>Edit account</h2>
 
       <div className="field">
@@ -57,14 +58,17 @@ export default function EditAccountForm({ account, onSaved, onCancel }) {
       </div>
       <div className="field">
         <label htmlFor="acct-avatar">Avatar URL</label>
-        <input id="acct-avatar" type="url" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} />
+        <div className="field-with-upload">
+          <input id="acct-avatar" type="url" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} />
+          <UploadButton accept="image/*" className="upload-btn" onUploaded={(url) => setAvatarUrl(url)} onError={setError} />
+        </div>
       </div>
       <div className="field">
         <label htmlFor="acct-bio">Bio</label>
         <textarea id="acct-bio" value={bio} onChange={(e) => setBio(e.target.value)} />
       </div>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255,255,255,0.92)', fontFamily: 'Agdasima, sans-serif' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)', fontFamily: 'Agdasima, sans-serif' }}>
         <input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} />
         Verified
       </label>

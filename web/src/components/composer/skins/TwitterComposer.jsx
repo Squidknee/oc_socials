@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient.js';
+import UploadButton from '../../UploadButton.jsx';
 import '../composer.css';
 
 function toDatetimeLocal(date) {
@@ -117,6 +118,11 @@ export default function TwitterComposer({ account, onPosted, onCancel }) {
               <option value="image">Photo</option>
               <option value="video">Video</option>
             </select>
+            <UploadButton
+              className="composer-upload-btn"
+              onUploaded={(url, kind) => updateMediaItem(i, { url, kind })}
+              onError={setError}
+            />
             <button type="button" className="composer-remove-media" onClick={() => removeMediaItem(i)} aria-label="Remove">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18" /><path d="M6 6l12 12" /></svg>
             </button>

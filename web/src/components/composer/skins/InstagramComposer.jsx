@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient.js';
+import UploadButton from '../../UploadButton.jsx';
 import '../composer.css';
 
 function toDatetimeLocal(date) {
@@ -7,9 +8,6 @@ function toDatetimeLocal(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-// Media URLs only for now, not a real file upload — matches how avatar_url
-// already works everywhere else in this app (paste a link). Real uploads
-// would need Supabase Storage wired up, which is a separate piece of work.
 export default function InstagramComposer({ account, onPosted, onCancel }) {
   const platform = account.platforms;
 
@@ -99,6 +97,11 @@ export default function InstagramComposer({ account, onPosted, onCancel }) {
               <option value="image">Photo</option>
               <option value="video">Video</option>
             </select>
+            <UploadButton
+              className="composer-upload-btn"
+              onUploaded={(url, kind) => updateMediaItem(i, { url, kind })}
+              onError={setError}
+            />
             {mediaItems.length > 1 && (
               <button type="button" className="composer-remove-media" onClick={() => removeMediaItem(i)} aria-label="Remove">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18" /><path d="M6 6l12 12" /></svg>

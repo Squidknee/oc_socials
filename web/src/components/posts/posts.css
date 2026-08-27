@@ -37,7 +37,7 @@
 }
 .ig-post-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .ig-post-headerinfo { display: flex; flex-direction: column; line-height: 1.2; }
-.ig-post-handle { font-weight: 600; font-size: 0.92rem; color: inherit; text-decoration: none; }
+.ig-post-handle { font-weight: 600; font-size: 0.92rem; color: inherit; text-decoration: none; line-height: 1; }
 .ig-post-time { font-size: 0.78rem; color: #8e8e8e; }
 
 .ig-post-media {

@@ -44,21 +44,3 @@ export async function fetchViewerAccountId({ worldId, platformSlug, userId }) {
 
   return data?.id ?? null;
 }
-
-// Same stand-in, but for a feed that mixes posts from multiple platforms
-// at once (WorldFeed) — one viewer account per platform slug, since
-// "who am I acting as" is different on Instagram than on Twitter.
-export async function fetchViewerAccountsBySlug({ worldId, userId }) {
-  const { data } = await supabase
-    .from('platform_accounts')
-    .select('id, characters!inner ( owner_id ), platforms!inner ( slug )')
-    .eq('world_id', worldId)
-    .eq('characters.owner_id', userId);
-
-  const bySlug = {};
-  for (const row of data ?? []) {
-    const slug = row.platforms?.slug;
-    if (slug && !(slug in bySlug)) bySlug[slug] = row.id;
-  }
-  return bySlug;
-}

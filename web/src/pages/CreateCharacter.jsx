@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { usePlatforms } from '../lib/PlatformsContext.jsx';
 import { seedPlatformAccounts } from '../lib/platformAccounts.js';
+import UploadButton from '../components/UploadButton.jsx';
 
 // Dedicated page for creating a character within a world — replaces the
 // toggle-form that used to live inside CharacterManager's list.
@@ -99,8 +100,11 @@ export default function CreateCharacter() {
           </div>
 
           <div className="field">
-            <label htmlFor="avatar-url">Avatar URL <span className="field-optional">(optional)</span></label>
-            <input id="avatar-url" type="url" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://..." />
+            <label htmlFor="avatar-url">Avatar <span className="field-optional">(optional)</span></label>
+            <div className="field-with-upload">
+              <input id="avatar-url" type="url" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://... or upload a file" />
+              <UploadButton accept="image/*" className="upload-btn" onUploaded={(url) => setAvatarUrl(url)} onError={setError} />
+            </div>
           </div>
 
           <div className="field">

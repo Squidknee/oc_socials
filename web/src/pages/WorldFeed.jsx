@@ -1,22 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
-import { useAuth } from '../lib/AuthContext.jsx';
+import { usePlatforms } from '../lib/PlatformsContext.jsx';
 import CharacterManager from '../components/CharacterManager.jsx';
-import Post from '../components/posts/Post.jsx';
-import { fetchViewerAccountsBySlug } from '../lib/platformAccounts.js';
 
-// Feed of posts for a single world, newest first, mixing every platform.
-// TODO: proper character switcher (post-as-character) and a post composer
-// entry point here — viewerAccountsBySlug is a stand-in (the user's first
-// account per platform in this world) until that switcher exists.
+// Hub for a world: links into each platform's own world-wide feed, plus
+// managing your own characters here. Actual posts live on each platform's
+// feed page (PlatformFeedPage) and profile pages, not mixed into a single
+// list here.
 export default function WorldFeed() {
   const { worldId } = useParams();
-  const { user } = useAuth();
+  const { platforms } = usePlatforms();
   const [world, setWorld] = useState(null);
-  const [posts, setPosts] = useState([]);
-  const [viewerAccountsBySlug, setViewerAccountsBySlug] = useState({});
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchWorld() {
@@ -24,51 +19,28 @@ export default function WorldFeed() {
       setWorld(data);
     }
 
-    async function fetchPosts() {
-      const { data, error } = await supabase
-        .from('posts')
-        .select(
-          'id, content, created_at, base_like_count, retweet_count, client_label, media_url, media_kind, platform_accounts ( id, handle, display_name, avatar_url, verified, platforms ( slug, name ) )'
-        )
-        .eq('world_id', worldId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching posts:', error);
-      } else {
-        setPosts(data ?? []);
-      }
-      setLoading(false);
-    }
-
     fetchWorld();
-    fetchPosts();
-    fetchViewerAccountsBySlug({ worldId, userId: user.id }).then(setViewerAccountsBySlug);
-  }, [worldId, user.id]);
+  }, [worldId]);
+
+  const feedPlatforms = platforms.filter((p) => p.kind === 'feed');
 
   return (
     <div style={{ padding: '1rem' }}>
-      <h1>{world?.name ?? 'World Feed'}</h1>
+      <h1>{world?.name ?? 'World'}</h1>
+
+      <span className="section-label">Platforms</span>
+      <div className="account-list" style={{ marginBottom: '1.5rem', marginTop: '0.5rem' }}>
+        {feedPlatforms.map((platform) => (
+          <Link className="account-card" to={`/worlds/${worldId}/platforms/${platform.slug}`} key={platform.id}>
+            <div className="account-info">
+              <span className="platform-chip">{platform.name}</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+          </Link>
+        ))}
+      </div>
 
       <CharacterManager worldId={worldId} />
-
-      {loading ? (
-        <p>Loading feed…</p>
-      ) : (
-        <>
-          {posts.length === 0 && <p>No posts yet in this world.</p>}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-            {posts.map((post) => (
-              <Post
-                key={post.id}
-                post={post}
-                viewerAccountId={viewerAccountsBySlug[post.platform_accounts?.platforms?.slug] ?? null}
-              />
-            ))}
-          </div>
-        </>
-      )}
-      {/* TODO: new post composer, character switcher */}
     </div>
   );
 }
