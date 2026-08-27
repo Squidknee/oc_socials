@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Alumni+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Agdasima&family=Aldrich&display=swap');
 
 html,
 body {
@@ -36,7 +36,11 @@ body {
   margin: 0 auto;
   text-align: center;
   color: rgba(255, 255, 255, 1);
-  font-family: "Alumni Sans", sans-serif;
+  font-family: Aldrich, sans-serif;
+}
+
+.login-field-label {
+  font-family: Agdasima, sans-serif;
 }
 
 .application-brand {
