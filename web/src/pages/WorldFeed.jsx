@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
+import CharacterManager from '../components/CharacterManager.jsx';
 
 // Feed of posts for a single world, newest first.
 // TODO: character switcher (post-as-character), new post composer,
@@ -29,20 +30,27 @@ export default function WorldFeed() {
     fetchPosts();
   }, [worldId]);
 
-  if (loading) return <p>Loading feed…</p>;
-
   return (
     <div style={{ padding: '1rem' }}>
       <h1>World Feed</h1>
-      {posts.length === 0 && <p>No posts yet in this world.</p>}
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {posts.map((post) => (
-          <li key={post.id} style={{ borderBottom: '1px solid #eee', padding: '0.75rem 0' }}>
-            <strong>@{post.characters?.handle}</strong>
-            <p>{post.content}</p>
-          </li>
-        ))}
-      </ul>
+
+      <CharacterManager worldId={worldId} />
+
+      {loading ? (
+        <p>Loading feed…</p>
+      ) : (
+        <>
+          {posts.length === 0 && <p>No posts yet in this world.</p>}
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {posts.map((post) => (
+              <li key={post.id} style={{ borderBottom: '1px solid #eee', padding: '0.75rem 0' }}>
+                <strong>@{post.characters?.handle}</strong>
+                <p>{post.content}</p>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       {/* TODO: new post composer, character switcher */}
     </div>
   );
