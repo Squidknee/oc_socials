@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -14,12 +14,24 @@ export default function Login() {
     setError(null);
     setSubmitting(true);
 
+    // Auth itself is still email-based — look up the email behind this
+    // username first, then sign in with that like normal.
+    const { data: email, error: lookupError } = await supabase.rpc('get_email_for_username', {
+      _username: username,
+    });
+
+    if (lookupError || !email) {
+      setSubmitting(false);
+      setError('Invalid username or password.');
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     setSubmitting(false);
 
     if (error) {
-      setError(error.message);
+      setError('Invalid username or password.');
     } else {
       navigate('/');
     }
@@ -30,11 +42,11 @@ export default function Login() {
       <h1 className="login-title">Log In</h1>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <label className="login-field-label">
-          Email
+          Username
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
             style={{ display: 'block', width: '100%' }}
           />
