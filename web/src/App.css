@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Antic+Slab&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alumni+Sans&display=swap');
 
 html,
 body {
@@ -35,7 +35,8 @@ body {
 .login-title {
   margin: 0 auto;
   text-align: center;
-  font-family: "Antic Slab", serif;
+  color: rgba(255, 255, 255, 1);
+  font-family: "Alumni Sans", sans-serif;
 }
 
 .application-brand {
