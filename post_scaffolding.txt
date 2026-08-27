@@ -48,3 +48,25 @@ Twitter
         repost button - only for show
         share button - only for show
         like button - toggable for heart filled in red and not filled in
+
+
+
+iMessage:
+    Open up on an empty list devoid of messages. Search bar at the bottom and a "new message" icon for creating new messages. 
+    As messages get created, they will populate the list. You will also be able to pin conversations
+
+    Messages overview: 
+        Heading of "Messages" top center
+        Pinned profiles (if applicable) - this will be the profile picture of the character the user is talking TO, up to 6, flex layout
+        The unpinned chats will be in a list below. Profile picture on the left and name beside it. underneath is most recent messahe. Then there will be a time stamp and a carrot to signify that you can open the chat
+        There needs to be a read/unread flag as unread messages will have a blue circle in front of the profile picture, or next to the name underneath the profile picture if Pinned
+        If pinned, unread messages should appear in little chat bubbles above the profile picture from the user
+
+    Message content: 
+        back button at the top to go back to the message overview. shows how many unread messages you have as a number beside a <
+        profile picture and name underneath of who you are talking to
+        your messages go on the right and the recieving messages go on the left
+        time stamps per message cluster, and have read status be toggable
+        at the bottom there is a text box where you can include your message (the blank box has placeholder message text inside)
+        beside the text box there is a plus sign for adding images 
+
