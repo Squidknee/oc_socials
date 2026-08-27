@@ -1,0 +1,143 @@
+/* Instagram-style post skin. Deliberately an original "photo feed post"
+   pattern (light card, square media, icon row, bold-handle caption) rather
+   than a pixel copy of any real app's chrome/icons/branding. */
+
+.ig-post {
+  width: 100%;
+  max-width: 470px;
+  background: #fefefe;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
+  color: #262626;
+}
+
+.ig-post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+}
+.ig-post-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #8e8e8e;
+  text-decoration: none;
+}
+.ig-post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ig-post-headerinfo { display: flex; flex-direction: column; line-height: 1.2; }
+.ig-post-handle { font-weight: 600; font-size: 0.92rem; color: inherit; text-decoration: none; }
+.ig-post-time { font-size: 0.78rem; color: #8e8e8e; }
+
+.ig-post-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+.ig-post-media img, .ig-post-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ig-carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #262626;
+}
+.ig-carousel-nav.prev { left: 8px; }
+.ig-carousel-nav.next { right: 8px; }
+.ig-carousel-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+.ig-carousel-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255, 255, 255, 0.6); }
+.ig-carousel-dot.active { background: #fff; }
+
+.ig-post-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.6rem 0.85rem 0.2rem;
+}
+.ig-action-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #262626;
+  display: flex;
+  align-items: center;
+}
+.ig-action-btn:disabled { color: #c7c7c7; cursor: default; }
+.ig-action-btn .ig-heart-filled { color: crimson; }
+
+.ig-post-likes { padding: 0.35rem 0.85rem 0; font-size: 0.9rem; font-weight: 600; }
+
+.ig-post-caption { padding: 0.4rem 0.85rem 0; margin: 0; font-size: 0.92rem; line-height: 1.4; }
+.ig-post-caption .hashtag { color: #3b82f6; }
+
+.ig-post-comments-toggle {
+  display: block;
+  background: none;
+  border: none;
+  padding: 0.4rem 0.85rem 0;
+  color: #8e8e8e;
+  font-size: 0.86rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ig-post-comments { padding: 0.3rem 0.85rem 0.85rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.ig-post-comment { margin: 0; font-size: 0.88rem; line-height: 1.4; }
+.ig-comment-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 0.5rem;
+}
+.ig-comment-form input {
+  flex-grow: 1;
+  border: none;
+  outline: none;
+  font-size: 0.88rem;
+  font-family: system-ui, sans-serif;
+}
+.ig-comment-form button {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.ig-comment-form button:disabled { color: #c7c7c7; cursor: default; }

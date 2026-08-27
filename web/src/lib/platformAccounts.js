@@ -27,3 +27,38 @@ export async function seedPlatformAccounts({ character, worldId, platforms }) {
     console.error('Error seeding platform accounts:', error);
   }
 }
+
+// Stand-in for a real character-switcher: picks the first platform account
+// the current user owns on the given platform, in the given world, to act
+// as while liking/commenting. Used anywhere a feed or profile needs to
+// know "who am I browsing as" until an actual switcher exists.
+export async function fetchViewerAccountId({ worldId, platformSlug, userId }) {
+  const { data } = await supabase
+    .from('platform_accounts')
+    .select('id, characters!inner ( owner_id ), platforms!inner ( slug )')
+    .eq('world_id', worldId)
+    .eq('characters.owner_id', userId)
+    .eq('platforms.slug', platformSlug)
+    .limit(1)
+    .maybeSingle();
+
+  return data?.id ?? null;
+}
+
+// Same stand-in, but for a feed that mixes posts from multiple platforms
+// at once (WorldFeed) — one viewer account per platform slug, since
+// "who am I acting as" is different on Instagram than on Twitter.
+export async function fetchViewerAccountsBySlug({ worldId, userId }) {
+  const { data } = await supabase
+    .from('platform_accounts')
+    .select('id, characters!inner ( owner_id ), platforms!inner ( slug )')
+    .eq('world_id', worldId)
+    .eq('characters.owner_id', userId);
+
+  const bySlug = {};
+  for (const row of data ?? []) {
+    const slug = row.platforms?.slug;
+    if (slug && !(slug in bySlug)) bySlug[slug] = row.id;
+  }
+  return bySlug;
+}

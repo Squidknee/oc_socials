@@ -1,21 +1,35 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
+import { useAuth } from '../lib/AuthContext.jsx';
 import CharacterManager from '../components/CharacterManager.jsx';
+import Post from '../components/posts/Post.jsx';
+import { fetchViewerAccountsBySlug } from '../lib/platformAccounts.js';
 
-// Feed of posts for a single world, newest first.
-// TODO: character switcher (post-as-character), new post composer,
-// comments/likes on each post.
+// Feed of posts for a single world, newest first, mixing every platform.
+// TODO: proper character switcher (post-as-character) and a post composer
+// entry point here — viewerAccountsBySlug is a stand-in (the user's first
+// account per platform in this world) until that switcher exists.
 export default function WorldFeed() {
   const { worldId } = useParams();
+  const { user } = useAuth();
+  const [world, setWorld] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [viewerAccountsBySlug, setViewerAccountsBySlug] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    async function fetchWorld() {
+      const { data } = await supabase.from('worlds').select('name').eq('id', worldId).single();
+      setWorld(data);
+    }
+
     async function fetchPosts() {
       const { data, error } = await supabase
         .from('posts')
-        .select('id, content, created_at, characters ( handle, display_name, avatar_url )')
+        .select(
+          'id, content, created_at, base_like_count, retweet_count, client_label, media_url, media_kind, platform_accounts ( id, handle, display_name, avatar_url, verified, platforms ( slug, name ) )'
+        )
         .eq('world_id', worldId)
         .order('created_at', { ascending: false });
 
@@ -27,12 +41,14 @@ export default function WorldFeed() {
       setLoading(false);
     }
 
+    fetchWorld();
     fetchPosts();
-  }, [worldId]);
+    fetchViewerAccountsBySlug({ worldId, userId: user.id }).then(setViewerAccountsBySlug);
+  }, [worldId, user.id]);
 
   return (
     <div style={{ padding: '1rem' }}>
-      <h1>World Feed</h1>
+      <h1>{world?.name ?? 'World Feed'}</h1>
 
       <CharacterManager worldId={worldId} />
 
@@ -41,14 +57,15 @@ export default function WorldFeed() {
       ) : (
         <>
           {posts.length === 0 && <p>No posts yet in this world.</p>}
-          <ul style={{ listStyle: 'none', padding: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
             {posts.map((post) => (
-              <li key={post.id} style={{ borderBottom: '1px solid #eee', padding: '0.75rem 0' }}>
-                <strong>@{post.characters?.handle}</strong>
-                <p>{post.content}</p>
-              </li>
+              <Post
+                key={post.id}
+                post={post}
+                viewerAccountId={viewerAccountsBySlug[post.platform_accounts?.platforms?.slug] ?? null}
+              />
             ))}
-          </ul>
+          </div>
         </>
       )}
       {/* TODO: new post composer, character switcher */}

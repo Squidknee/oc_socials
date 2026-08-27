@@ -10,6 +10,7 @@ import CreateWorld from './pages/CreateWorld.jsx';
 import WorldFeed from './pages/WorldFeed.jsx';
 import CreateCharacter from './pages/CreateCharacter.jsx';
 import CharacterProfile from './pages/CharacterProfile.jsx';
+import PlatformAccountProfile from './pages/PlatformAccountProfile.jsx';
 
 function NavBar() {
   const { user, signOut } = useAuth();
@@ -24,9 +25,12 @@ function NavBar() {
         />
       </Link>
       {user ? (
-        <button onClick={signOut}>Log Out</button>
+        <>
+          <Link className="application-nav-link" to="/">Worlds</Link>
+          <button onClick={signOut}>Log Out</button>
+        </>
       ) : (
-        <Link className="application-login-link" to="/login">Log In</Link>
+        <Link className="application-nav-link" to="/login">Log In</Link>
       )}
     </nav>
   );
@@ -78,6 +82,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <CharacterProfile />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/accounts/:accountId"
+              element={
+                <RequireAuth>
+                  <PlatformAccountProfile />
                 </RequireAuth>
               }
             />

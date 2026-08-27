@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { downloadCharacterFile } from '../lib/characterFile.js';
+import VerifiedBadge from '../components/VerifiedBadge.jsx';
 
 function getInitials(name) {
   const words = (name ?? '').trim().split(/\s+/).filter(Boolean);
@@ -43,7 +44,7 @@ export default function CharacterProfile() {
     async function fetchAccounts() {
       const { data, error } = await supabase
         .from('platform_accounts')
-        .select('id, handle, avatar_url, platforms ( name, slug )')
+        .select('id, handle, avatar_url, verified, platforms ( name, slug )')
         .eq('character_id', characterId);
 
       if (error) {
@@ -93,7 +94,7 @@ export default function CharacterProfile() {
         <div className="account-list">
           {accounts.length === 0 && <p style={{ color: 'rgba(255,255,255,0.6)' }}>No platform accounts yet.</p>}
           {accounts.map((account) => (
-            <div className="account-card" key={account.id}>
+            <Link className="account-card" to={`/accounts/${account.id}`} key={account.id}>
               <div className="account-avatar">
                 {account.avatar_url ? (
                   <img src={account.avatar_url} alt="" onError={(e) => { e.target.style.display = 'none'; }} />
@@ -103,9 +104,12 @@ export default function CharacterProfile() {
               </div>
               <div className="account-info">
                 <span className="platform-chip">{account.platforms?.name}</span>
-                <span className="account-handle">@{account.handle}</span>
+                <span className="account-handle" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  @{account.handle}
+                  {account.verified && <VerifiedBadge size={13} />}
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

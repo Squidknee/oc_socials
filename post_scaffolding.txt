@@ -1,0 +1,50 @@
+
+Some information will be editable by the user*
+General Items needed for posts: 
+    Photos
+    Videos
+    Comment
+    Like
+    Repost
+    Share - dummy button
+    Account name 
+    profile picture
+    date and time of post 
+    comments
+    hashtags
+    verified checkmark
+
+
+Instagram: 
+    Needs: 
+        Account name for the header - pulled from base account information
+        Profile Picture for the header - pulled from base account information
+        Time for how long ago it was posted (2h 3h, etc) - can be edited by user in case they wanted to post from a previous date
+        Post content - Picture(s)/Video - will be uploaded by the user
+        Likes - heart picture and number of likes beside it, can be edited by user to inflate numbers
+        Like status - If the heart is red or not, can be edited by user
+        comments - entire comment section can be edited and fabricated by user but other accounts may also leave comments. Comment class will come separate but number of comments will populate beside an icon
+        Reblog -  [will not be functional within this app, just for visual sake]
+        Share - [will not be functional within this app, just for visual sake]
+        liked by - an account the character follows and other users may be shown 
+        account name for the caption section 
+    Optional content: 
+        caption - will appear at the bottom beside account name if applicable
+        hashtags - will show up in blue but not be clickable
+
+Twitter
+    Needs: 
+        Account name
+        handle 
+        profile picture
+        tweet body - could be image AND OR text
+        Time - editable by user
+        Date - editable by user
+        Device - editable by user
+        Retweets - number, editable by user
+        Likes - editable by user
+        comments 
+        comment button 
+        repost button - only for show
+        share button - only for show
+        like button - toggable for heart filled in red and not filled in

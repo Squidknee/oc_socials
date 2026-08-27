@@ -23,7 +23,7 @@ body {
   border-bottom: none;
 }
 
-.application-login-link {
+.application-nav-link {
   color: rgba(255, 255, 255, 1);
   text-decoration: none;
   font-family: Balthazar, serif;
@@ -282,7 +282,10 @@ body {
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 0.75rem;
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  color: inherit;
 }
+.account-card:hover { background-color: rgba(0, 0, 0, 0.16); }
 .account-avatar {
   flex-shrink: 0;
   width: 44px;
