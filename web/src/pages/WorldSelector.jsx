@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
-import CreateWorldForm from '../components/CreateWorldForm.jsx';
 
 // Lists worlds the logged-in user is a member of.
 // TODO: add "join via invite code" flow.
@@ -10,7 +9,6 @@ export default function WorldSelector() {
   const { user } = useAuth();
   const [worlds, setWorlds] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
   // Tracks which world (by id) is currently mid-delete, so we can disable
   // just that one button and show "Deleting…" without touching the others.
   const [deletingId, setDeletingId] = useState(null);
@@ -94,16 +92,9 @@ export default function WorldSelector() {
         ))}
       </ul>
 
-      {showCreateForm ? (
-        <CreateWorldForm
-          onCreated={() => {
-            setShowCreateForm(false);
-            fetchWorlds();
-          }}
-        />
-      ) : (
-        <button onClick={() => setShowCreateForm(true)}>+ Create a World</button>
-      )}
+      <Link className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }} to="/worlds/new">
+        + Create a World
+      </Link>
 
       {/* TODO: button to redeem an invite code */}
     </div>

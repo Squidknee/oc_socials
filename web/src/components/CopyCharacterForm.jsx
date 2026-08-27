@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
+import { usePlatforms } from '../lib/PlatformsContext.jsx';
+import { seedPlatformAccounts } from '../lib/platformAccounts.js';
 
 // Shown inline when the user clicks "Copy" on one of their characters.
 // Lets them pick a destination world (from worlds they belong to) and
@@ -8,6 +10,7 @@ import { useAuth } from '../lib/AuthContext.jsx';
 // source handle might already be taken in the destination.
 export default function CopyCharacterForm({ character, onCopied, onCancel }) {
   const { user } = useAuth();
+  const { platforms } = usePlatforms();
   const [worlds, setWorlds] = useState([]);
   const [targetWorldId, setTargetWorldId] = useState('');
   const [handle, setHandle] = useState(character.handle);
@@ -46,18 +49,21 @@ export default function CopyCharacterForm({ character, onCopied, onCancel }) {
     setError(null);
     setSubmitting(true);
 
-    const { error } = await supabase.from('characters').insert({
-      owner_id: user.id,
-      world_id: targetWorldId,
-      handle,
-      display_name: character.display_name,
-      avatar_url: character.avatar_url,
-      bio: character.bio,
-    });
-
-    setSubmitting(false);
+    const { data: copy, error } = await supabase
+      .from('characters')
+      .insert({
+        owner_id: user.id,
+        world_id: targetWorldId,
+        handle,
+        display_name: character.display_name,
+        avatar_url: character.avatar_url,
+        bio: character.bio,
+      })
+      .select()
+      .single();
 
     if (error) {
+      setSubmitting(false);
       // Postgres error code 23505 = unique constraint violation. We know
       // the only unique constraint on this table is (world_id, handle),
       // so we can give a specific, actionable message instead of the raw
@@ -70,6 +76,9 @@ export default function CopyCharacterForm({ character, onCopied, onCancel }) {
       return;
     }
 
+    await seedPlatformAccounts({ character: copy, worldId: targetWorldId, platforms });
+
+    setSubmitting(false);
     onCopied?.();
   }
 

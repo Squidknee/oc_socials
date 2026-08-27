@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
+import { usePlatforms } from '../lib/PlatformsContext.jsx';
 import { parseCharacterFile } from '../lib/characterFile.js';
+import { seedPlatformAccounts } from '../lib/platformAccounts.js';
 
 // Lets a user upload a character exported by ANYONE (a friend who made a
 // character for them, their own export from another world, etc.) and add
@@ -11,6 +13,7 @@ import { parseCharacterFile } from '../lib/characterFile.js';
 // just handing over the data to recreate it.
 export default function ImportCharacterForm({ worldId, onImported, onCancel }) {
   const { user } = useAuth();
+  const { platforms } = usePlatforms();
   // "parsed" holds the file's contents once successfully read, so we can
   // show an editable preview before actually inserting anything.
   const [parsed, setParsed] = useState(null);
@@ -47,18 +50,21 @@ export default function ImportCharacterForm({ worldId, onImported, onCancel }) {
     setSubmitError(null);
     setSubmitting(true);
 
-    const { error } = await supabase.from('characters').insert({
-      owner_id: user.id,
-      world_id: worldId,
-      handle,
-      display_name: parsed.display_name,
-      avatar_url: parsed.avatar_url,
-      bio: parsed.bio,
-    });
-
-    setSubmitting(false);
+    const { data: character, error } = await supabase
+      .from('characters')
+      .insert({
+        owner_id: user.id,
+        world_id: worldId,
+        handle,
+        display_name: parsed.display_name,
+        avatar_url: parsed.avatar_url,
+        bio: parsed.bio,
+      })
+      .select()
+      .single();
 
     if (error) {
+      setSubmitting(false);
       if (error.code === '23505') {
         setSubmitError('That handle is already taken in this world — try a different one.');
       } else {
@@ -67,6 +73,9 @@ export default function ImportCharacterForm({ worldId, onImported, onCancel }) {
       return;
     }
 
+    await seedPlatformAccounts({ character, worldId, platforms });
+
+    setSubmitting(false);
     onImported?.();
   }
 

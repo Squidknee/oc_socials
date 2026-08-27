@@ -6,7 +6,9 @@ import './App.css';
 import Login from './pages/Login.jsx';
 import SignUp from './pages/SignUp.jsx';
 import WorldSelector from './pages/WorldSelector.jsx';
+import CreateWorld from './pages/CreateWorld.jsx';
 import WorldFeed from './pages/WorldFeed.jsx';
+import CreateCharacter from './pages/CreateCharacter.jsx';
 import CharacterProfile from './pages/CharacterProfile.jsx';
 
 function NavBar() {
@@ -48,10 +50,26 @@ export default function App() {
               }
             />
             <Route
+              path="/worlds/new"
+              element={
+                <RequireAuth>
+                  <CreateWorld />
+                </RequireAuth>
+              }
+            />
+            <Route
               path="/worlds/:worldId"
               element={
                 <RequireAuth>
                   <WorldFeed />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/worlds/:worldId/characters/new"
+              element={
+                <RequireAuth>
+                  <CreateCharacter />
                 </RequireAuth>
               }
             />

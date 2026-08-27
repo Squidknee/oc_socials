@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 
@@ -9,12 +10,15 @@ import { useAuth } from '../lib/AuthContext.jsx';
 // e.g. <CreateWorldForm onCreated={someFunction} />
 export default function CreateWorldForm({ onCreated }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  // inviteCode is null until a world is successfully created, then holds
-  // the generated code so we can show it to the user to share with friends.
+  // createdWorld/inviteCode are null until a world is successfully created,
+  // then hold the new world + its generated code so we can show a success
+  // state with a link into the world and something to share with friends.
+  const [createdWorld, setCreatedWorld] = useState(null);
   const [inviteCode, setInviteCode] = useState(null);
 
   async function handleSubmit(e) {
@@ -69,6 +73,7 @@ export default function CreateWorldForm({ onCreated }) {
       return;
     }
 
+    setCreatedWorld(world);
     setInviteCode(invite.code);
     setName('');
     setDescription('');
@@ -84,45 +89,92 @@ export default function CreateWorldForm({ onCreated }) {
   // depending on component state, instead of one big conditional render.
   if (inviteCode) {
     return (
-      <div style={{ border: '1px solid #ddd', padding: '1rem', marginTop: '1rem' }}>
-        <p>World created! Share this invite code with your friends:</p>
-        <code style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{inviteCode}</code>
-        <br />
-        <button onClick={() => setInviteCode(null)} style={{ marginTop: '0.5rem' }}>
-          Create another world
-        </button>
+      <div className="panel" style={{ alignItems: 'center', textAlign: 'center', maxWidth: 460 }}>
+        <div className="check-badge">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9.25" /><path d="M8.2 12.3l2.6 2.6 5-5.4" /></svg>
+        </div>
+
+        <h1 className="panel-title">World created!</h1>
+        <p className="panel-subtitle accent">{createdWorld.name}</p>
+
+        <div className="field" style={{ width: '100%', textAlign: 'left' }}>
+          <label>Invite code</label>
+          <div className="invite-row">
+            <span className="invite-code">{inviteCode}</span>
+            <button
+              className="copy-btn"
+              type="button"
+              aria-label="Copy invite code"
+              onClick={() => navigator.clipboard?.writeText(inviteCode)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+            </button>
+          </div>
+          <span className="helper">Share this with friends so they can join.</span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', width: '100%' }}>
+          <button className="btn-primary" type="button" onClick={() => navigate(`/worlds/${createdWorld.id}`)}>
+            Go to World
+          </button>
+          <button
+            className="text-link"
+            type="button"
+            style={{ border: 'none', cursor: 'pointer' }}
+            onClick={() => {
+              setInviteCode(null);
+              setCreatedWorld(null);
+            }}
+          >
+            Create another world
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
-      <label>
-        World name
-        <input
-          type="text"
-          value={name}
-          // onChange fires on every keystroke; e.target.value is the
-          // input's current text, same DOM API as vanilla JS.
-          onChange={(e) => setName(e.target.value)}
-          required
-          style={{ display: 'block', width: '100%' }}
-        />
-      </label>
-      <label>
-        Description
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          style={{ display: 'block', width: '100%' }}
-        />
-      </label>
-      {/* error && <p>...</p> only renders the <p> when error is truthy —
-          React just skips rendering anything for false/null/undefined. */}
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
-      <button type="submit" disabled={submitting}>
-        {submitting ? 'Creating…' : 'Create World'}
-      </button>
-    </form>
+    <div className="panel" style={{ maxWidth: 460 }}>
+      <a className="back-link" href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        Back to your worlds
+      </a>
+
+      <div className="panel-heading">
+        <h1 className="panel-title">Create a World</h1>
+        <p className="panel-subtitle">Give your community a name and set the scene.</p>
+      </div>
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="field">
+          <label htmlFor="world-name">World name</label>
+          <input
+            id="world-name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Modern Coffee Shop AU"
+            required
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="world-desc">Description</label>
+          <textarea
+            id="world-desc"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What's this world about? Set the scene for anyone who joins."
+          />
+        </div>
+        {error && <p style={{ color: 'crimson' }}>{error}</p>}
+        <button className="btn-primary" type="submit" disabled={submitting}>
+          {submitting ? 'Creating…' : 'Create World'}
+        </button>
+        <span className="helper">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+          Worlds are invite-only — you'll get a shareable code once it's created.
+        </span>
+      </form>
+    </div>
   );
 }

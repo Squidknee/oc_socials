@@ -64,3 +64,249 @@ body {
   max-width: 70px;
   min-height: 30px;
 }
+
+/* Shared "page with a centered card" chrome, used by the dedicated
+   Create World / Create Character / Character Profile pages — same
+   panel/field/button language as the login card above. */
+
+.page-center {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem 4rem;
+}
+
+.panel {
+  width: 100%;
+  padding: 2rem;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: Balthazar, serif;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 0.95rem;
+  align-self: flex-start;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  padding-bottom: 1px;
+}
+.back-link:hover { color: #fff; border-color: rgba(255, 255, 255, 0.7); }
+
+.panel-heading { display: flex; flex-direction: column; gap: 0.4rem; text-align: center; }
+.panel-title {
+  margin: 0;
+  color: rgba(255, 255, 255, 1);
+  font-family: Aldrich, sans-serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+}
+.panel-subtitle { margin: 0; color: rgba(255, 255, 255, 0.72); font-size: 1.05rem; line-height: 1.4; }
+.panel-subtitle .accent { font-family: Balthazar, serif; color: rgba(255, 255, 255, 0.9); }
+
+.field { display: flex; flex-direction: column; gap: 0.4rem; }
+.field label { font-family: Agdasima, sans-serif; color: rgba(255, 255, 255, 0.92); font-size: 1.05rem; }
+.field-optional { color: rgba(255, 255, 255, 0.5); font-size: 0.85rem; font-weight: normal; }
+.field input, .field textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  color: rgba(255, 255, 255, 1);
+  font-family: Agdasima, sans-serif;
+  font-size: 1.05rem;
+  outline: none;
+  box-sizing: border-box;
+}
+.field input::placeholder, .field textarea::placeholder { color: rgba(255, 255, 255, 0.42); }
+.field input:focus, .field textarea:focus { border-color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.12); }
+.field textarea { min-height: 100px; resize: vertical; }
+
+.input-row {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0.5rem;
+}
+.input-row:focus-within { border-color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.12); }
+.input-row .input-prefix { padding-left: 0.85rem; color: rgba(255, 255, 255, 0.55); font-family: Agdasima, sans-serif; font-size: 1.05rem; }
+.input-row input { border: none; background: transparent; padding-left: 0.15rem; }
+.input-row input:focus { border: none; background: transparent; }
+
+.avatar-preview {
+  align-self: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px dashed rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.05);
+}
+.avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+.btn-primary {
+  font-family: Agdasima, sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  background: oklch(0.40 0.14 288);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+}
+.btn-primary:hover { background: oklch(0.47 0.15 288); }
+.btn-primary:disabled { opacity: 0.6; cursor: default; }
+
+.text-link {
+  font-family: Balthazar, serif;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 0.98rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  padding-bottom: 1px;
+  background: none;
+}
+.text-link:hover { color: #fff; border-color: rgba(255, 255, 255, 0.7); }
+
+.helper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.helper svg { flex-shrink: 0; margin-top: 0.1rem; }
+
+/* Create World success state */
+.check-badge {
+  align-self: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 1);
+}
+.invite-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.9rem;
+}
+.invite-code {
+  flex-grow: 1;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.08em;
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 1);
+}
+.copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  border-radius: 0.4rem;
+  width: 34px;
+  height: 34px;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.copy-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* Character profile */
+.header-top { display: flex; align-items: flex-start; gap: 1.25rem; }
+.avatar {
+  flex-shrink: 0;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: Aldrich, sans-serif;
+  font-size: 1.5rem;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.identity { flex-grow: 1; display: flex; flex-direction: column; gap: 0.3rem; padding-top: 0.15rem; }
+.display-name { margin: 0; color: rgba(255, 255, 255, 1); font-family: Aldrich, sans-serif; font-size: 1.4rem; font-weight: 400; }
+.handle { margin: 0; color: rgba(255, 255, 255, 0.65); font-size: 1.05rem; }
+.icon-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+.icon-btn:hover { background: rgba(255, 255, 255, 0.16); }
+.bio { margin: 0; color: rgba(255, 255, 255, 0.88); font-size: 1.05rem; line-height: 1.5; }
+
+.section-label { color: rgba(255, 255, 255, 0.6); font-size: 0.92rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.account-list { display: flex; flex-direction: column; gap: 0.85rem; }
+.account-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.08);
+}
+.account-avatar {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: Aldrich, sans-serif;
+  font-size: 0.85rem;
+}
+.account-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.account-info { flex-grow: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+.platform-chip {
+  align-self: flex-start;
+  font-family: Agdasima, sans-serif;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.15rem 0.65rem;
+}
+.account-handle { color: rgba(255, 255, 255, 0.62); font-size: 0.95rem; }

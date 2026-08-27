@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { downloadCharacterFile } from '../lib/characterFile.js';
@@ -10,19 +11,11 @@ export default function CharacterManager({ worldId }) {
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [showImportForm, setShowImportForm] = useState(false);
   // Tracks which character (by id) currently has its "copy" form open —
   // null means none. Only one at a time keeps the UI from getting
   // cluttered with multiple open forms.
   const [copyingId, setCopyingId] = useState(null);
-
-  const [newHandle, setNewHandle] = useState('');
-  const [newDisplayName, setNewDisplayName] = useState('');
-  const [newAvatarUrl, setNewAvatarUrl] = useState('');
-  const [newBio, setNewBio] = useState('');
-  const [createError, setCreateError] = useState(null);
-  const [creating, setCreating] = useState(false);
 
   async function fetchCharacters() {
     setLoading(true);
@@ -50,36 +43,6 @@ export default function CharacterManager({ worldId }) {
     fetchCharacters();
   }, [worldId, user.id]);
 
-  async function handleCreate(e) {
-    e.preventDefault();
-    setCreateError(null);
-    setCreating(true);
-
-    const { error } = await supabase.from('characters').insert({
-      owner_id: user.id,
-      world_id: worldId,
-      handle: newHandle,
-      display_name: newDisplayName,
-      avatar_url: newAvatarUrl || null,
-      bio: newBio || null,
-    });
-
-    setCreating(false);
-
-    if (error) {
-      setCreateError(error.code === '23505' ? 'That handle is already taken in this world.' : error.message);
-      return;
-    }
-
-    // Reset the form fields and hide it, then refresh the list.
-    setNewHandle('');
-    setNewDisplayName('');
-    setNewAvatarUrl('');
-    setNewBio('');
-    setShowCreateForm(false);
-    fetchCharacters();
-  }
-
   if (loading) return <p>Loading characters…</p>;
 
   return (
@@ -91,7 +54,10 @@ export default function CharacterManager({ worldId }) {
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {characters.map((character) => (
           <li key={character.id} style={{ borderBottom: '1px solid #eee', padding: '0.5rem 0' }}>
-            <strong>{character.display_name}</strong> <span>@{character.handle}</span>
+            <Link to={`/characters/${character.id}`}>
+              <strong>{character.display_name}</strong>
+            </Link>{' '}
+            <span>@{character.handle}</span>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
               <button onClick={() => downloadCharacterFile(character)}>Export</button>
               <button
@@ -118,38 +84,11 @@ export default function CharacterManager({ worldId }) {
       </ul>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-        <button onClick={() => setShowCreateForm((v) => !v)}>
-          {showCreateForm ? 'Cancel' : '+ New Character'}
-        </button>
+        <Link to={`/worlds/${worldId}/characters/new`}>+ New Character</Link>
         <button onClick={() => setShowImportForm((v) => !v)}>
           {showImportForm ? 'Cancel' : 'Import Character from File'}
         </button>
       </div>
-
-      {showCreateForm && (
-        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-          <label>
-            Handle
-            <input type="text" value={newHandle} onChange={(e) => setNewHandle(e.target.value)} required />
-          </label>
-          <label>
-            Display name
-            <input type="text" value={newDisplayName} onChange={(e) => setNewDisplayName(e.target.value)} required />
-          </label>
-          <label>
-            Avatar URL (optional)
-            <input type="url" value={newAvatarUrl} onChange={(e) => setNewAvatarUrl(e.target.value)} />
-          </label>
-          <label>
-            Bio (optional)
-            <textarea value={newBio} onChange={(e) => setNewBio(e.target.value)} />
-          </label>
-          {createError && <p style={{ color: 'crimson' }}>{createError}</p>}
-          <button type="submit" disabled={creating}>
-            {creating ? 'Creating…' : 'Create Character'}
-          </button>
-        </form>
-      )}
 
       {showImportForm && (
         <ImportCharacterForm
