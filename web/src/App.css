@@ -12,6 +12,11 @@
 
 .application-brand-logo {
   display: block;
-  width: 10rem;
-  height: 2rem;
+  object-fit: scale-down;
+  width: auto;
+  align-self: center;
+  height: auto;
+  flex-grow: 0;
+  max-width: 70px;
+  min-height: 30px;
 }
