@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../../lib/supabaseClient.js';
 import { useAuth } from '../../../lib/AuthContext.jsx';
 import { fetchViewerAccountId } from '../../../lib/platformAccounts.js';
@@ -35,6 +36,11 @@ export default function TwitterProfile({ account, isOwner, onAccountUpdated }) {
 
   return (
     <div className="profile-page">
+      <div className="profile-tabs">
+        <span className="profile-tab active">Profile</span>
+        <Link className="profile-tab" to={`/worlds/${account.world_id}/platforms/twitter`}>Feed</Link>
+      </div>
+
       <div className="profile-header">
         <div className="profile-header-main">
           <div className="profile-avatar">

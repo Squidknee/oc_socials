@@ -1,17 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 
 // Lists worlds the logged-in user is a member of.
-// TODO: add "join via invite code" flow.
 export default function WorldSelector() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [worlds, setWorlds] = useState([]);
   const [loading, setLoading] = useState(true);
   // Tracks which world (by id) is currently mid-delete, so we can disable
   // just that one button and show "Deleting…" without touching the others.
   const [deletingId, setDeletingId] = useState(null);
+
+  const [showJoinForm, setShowJoinForm] = useState(false);
+  const [inviteCode, setInviteCode] = useState('');
+  const [joinError, setJoinError] = useState(null);
+  const [joining, setJoining] = useState(false);
 
   async function fetchWorlds() {
     setLoading(true);
@@ -63,6 +68,28 @@ export default function WorldSelector() {
     setWorlds((prev) => prev.filter((w) => w.id !== world.id));
   }
 
+  async function handleRedeem(e) {
+    e.preventDefault();
+    setJoinError(null);
+    setJoining(true);
+
+    // The actual join happens inside redeem_invite (a security definer
+    // function) — it validates the code, adds this user as a member, and
+    // bumps the invite's use count, all atomically. See 0012_redeem_invite.sql.
+    const { data: worldId, error } = await supabase.rpc('redeem_invite', {
+      _code: inviteCode.trim().toLowerCase(),
+    });
+
+    setJoining(false);
+
+    if (error) {
+      setJoinError(error.message);
+      return;
+    }
+
+    navigate(`/worlds/${worldId}`);
+  }
+
   if (loading) return <p>Loading worlds…</p>;
 
   return (
@@ -92,11 +119,36 @@ export default function WorldSelector() {
         ))}
       </ul>
 
-      <Link className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }} to="/worlds/new">
-        + Create a World
-      </Link>
+      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <Link className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }} to="/worlds/new">
+          + Create a World
+        </Link>
+        <button type="button" onClick={() => setShowJoinForm((v) => !v)}>
+          {showJoinForm ? 'Cancel' : 'Join with Invite Code'}
+        </button>
+      </div>
 
-      {/* TODO: button to redeem an invite code */}
+      {showJoinForm && (
+        <form
+          onSubmit={handleRedeem}
+          style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', border: '1px solid #ddd', padding: '0.75rem', marginTop: '0.75rem', maxWidth: 320 }}
+        >
+          <label>
+            Invite code
+            <input
+              type="text"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+              required
+              style={{ display: 'block', width: '100%' }}
+            />
+          </label>
+          {joinError && <p style={{ color: 'crimson' }}>{joinError}</p>}
+          <button type="submit" disabled={joining || !inviteCode.trim()}>
+            {joining ? 'Joining…' : 'Join World'}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

@@ -10,6 +10,17 @@
   color: #262626;
 }
 
+.profile-tabs { display: flex; gap: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
+.profile-tab {
+  padding-bottom: 0.6rem;
+  font-size: 0.95rem;
+  color: #8e8e8e;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.profile-tab.active { color: #262626; font-weight: 600; border-bottom-color: #262626; }
+
 .profile-header {
   display: flex;
   align-items: center;
