@@ -33,7 +33,11 @@ export default function EditCharacterForm({ character, onSaved, onCancel }) {
     setSubmitting(false);
 
     if (updateError) {
-      setError(updateError.code === '23505' ? 'That handle is already taken in this world.' : updateError.message);
+      if (updateError.code === '23505') {
+        setError(updateError.message.includes('display_name') ? 'That name is already taken in this world.' : 'That handle is already taken in this world.');
+      } else {
+        setError(updateError.message);
+      }
       return;
     }
 

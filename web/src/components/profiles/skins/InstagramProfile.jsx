@@ -7,6 +7,7 @@ import Post from '../../posts/Post.jsx';
 import PostComposer from '../../composer/PostComposer.jsx';
 import VerifiedBadge from '../../VerifiedBadge.jsx';
 import EditAccountForm from '../EditAccountForm.jsx';
+import { useFollow } from '../useFollow.js';
 import '../profiles.css';
 
 export default function InstagramProfile({ account, isOwner, onAccountUpdated }) {
@@ -19,6 +20,11 @@ export default function InstagramProfile({ account, isOwner, onAccountUpdated })
   // real user's OWN Instagram account in this world, whoever's profile
   // they're currently looking at, so they can like/comment as themselves.
   const [viewerAccountId, setViewerAccountId] = useState(null);
+  const { following, toggleFollow, busy: followBusy } = useFollow({
+    followedAccountId: account.id,
+    viewerAccountId,
+    worldId: account.world_id,
+  });
 
   async function fetchPosts() {
     const { data } = await supabase
@@ -64,13 +70,24 @@ export default function InstagramProfile({ account, isOwner, onAccountUpdated })
           </div>
         </div>
 
-        {isOwner && (
+        {isOwner ? (
           <div className="profile-actions">
             <button className="profile-edit-btn" type="button" onClick={() => setEditOpen((v) => !v)}>
               {editOpen ? 'Cancel' : 'Edit Profile'}
             </button>
             <button className="profile-newpost" type="button" onClick={() => setComposerOpen((v) => !v)}>
               {composerOpen ? 'Cancel' : '+ New Post'}
+            </button>
+          </div>
+        ) : viewerAccountId && (
+          <div className="profile-actions">
+            <button
+              className={following ? 'profile-edit-btn' : 'profile-newpost'}
+              type="button"
+              onClick={toggleFollow}
+              disabled={followBusy}
+            >
+              {following ? 'Following' : 'Follow'}
             </button>
           </div>
         )}

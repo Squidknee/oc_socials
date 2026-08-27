@@ -18,6 +18,9 @@ export default function CharacterManager({ worldId }) {
   // cluttered with multiple open forms.
   const [copyingId, setCopyingId] = useState(null);
   const [editingId, setEditingId] = useState(null);
+  // Tracks which character (by id) is currently mid-delete, matching the
+  // same disable-just-this-button pattern WorldSelector uses for worlds.
+  const [deletingId, setDeletingId] = useState(null);
 
   async function fetchCharacters() {
     setLoading(true);
@@ -45,6 +48,29 @@ export default function CharacterManager({ worldId }) {
     fetchCharacters();
   }, [worldId, user.id]);
 
+  async function handleDelete(character) {
+    const confirmed = window.confirm(
+      `Delete ${character.display_name}? This permanently removes their posts, platform accounts, comments, and likes. This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(character.id);
+
+    // characters_delete_owner RLS is the real enforcement; platform
+    // accounts/posts/comments/likes all cascade-delete from here.
+    const { error } = await supabase.from('characters').delete().eq('id', character.id);
+
+    setDeletingId(null);
+
+    if (error) {
+      console.error('Error deleting character:', error);
+      alert(`Couldn't delete character: ${error.message}`);
+      return;
+    }
+
+    setCharacters((prev) => prev.filter((c) => c.id !== character.id));
+  }
+
   if (loading) return <p>Loading characters…</p>;
 
   return (
@@ -69,6 +95,13 @@ export default function CharacterManager({ worldId }) {
                 onClick={() => setCopyingId(copyingId === character.id ? null : character.id)}
               >
                 {copyingId === character.id ? 'Cancel' : 'Copy to Another World'}
+              </button>
+              <button
+                onClick={() => handleDelete(character)}
+                disabled={deletingId === character.id}
+                style={{ color: 'crimson' }}
+              >
+                {deletingId === character.id ? 'Deleting…' : 'Delete'}
               </button>
             </div>
 

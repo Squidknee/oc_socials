@@ -50,7 +50,11 @@ export default function CreateCharacter() {
 
     if (charError) {
       setSubmitting(false);
-      setError(charError.code === '23505' ? 'That handle is already taken in this world.' : charError.message);
+      if (charError.code === '23505') {
+        setError(charError.message.includes('display_name') ? 'That name is already taken in this world.' : 'That handle is already taken in this world.');
+      } else {
+        setError(charError.message);
+      }
       return;
     }
 

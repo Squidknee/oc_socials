@@ -18,6 +18,7 @@ export default function ImportCharacterForm({ worldId, onImported, onCancel }) {
   // show an editable preview before actually inserting anything.
   const [parsed, setParsed] = useState(null);
   const [handle, setHandle] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [fileError, setFileError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -38,6 +39,7 @@ export default function ImportCharacterForm({ worldId, onImported, onCancel }) {
         const data = parseCharacterFile(reader.result);
         setParsed(data);
         setHandle(data.handle);
+        setDisplayName(data.display_name);
       } catch (err) {
         setFileError(err.message);
       }
@@ -56,7 +58,7 @@ export default function ImportCharacterForm({ worldId, onImported, onCancel }) {
         owner_id: user.id,
         world_id: worldId,
         handle,
-        display_name: parsed.display_name,
+        display_name: displayName,
         avatar_url: parsed.avatar_url,
         bio: parsed.bio,
       })
@@ -66,7 +68,11 @@ export default function ImportCharacterForm({ worldId, onImported, onCancel }) {
     if (error) {
       setSubmitting(false);
       if (error.code === '23505') {
-        setSubmitError('That handle is already taken in this world — try a different one.');
+        setSubmitError(
+          error.message.includes('display_name')
+            ? 'That name is already taken in this world — try a different one.'
+            : 'That handle is already taken in this world — try a different one.'
+        );
       } else {
         setSubmitError(error.message);
       }
@@ -100,6 +106,15 @@ export default function ImportCharacterForm({ worldId, onImported, onCancel }) {
               type="text"
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
+              required
+            />
+          </label>
+          <label>
+            Display name in this world
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
               required
             />
           </label>

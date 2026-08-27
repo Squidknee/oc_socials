@@ -14,6 +14,7 @@ export default function CopyCharacterForm({ character, onCopied, onCancel }) {
   const [worlds, setWorlds] = useState([]);
   const [targetWorldId, setTargetWorldId] = useState('');
   const [handle, setHandle] = useState(character.handle);
+  const [displayName, setDisplayName] = useState(character.display_name);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -55,7 +56,7 @@ export default function CopyCharacterForm({ character, onCopied, onCancel }) {
         owner_id: user.id,
         world_id: targetWorldId,
         handle,
-        display_name: character.display_name,
+        display_name: displayName,
         avatar_url: character.avatar_url,
         bio: character.bio,
       })
@@ -64,12 +65,15 @@ export default function CopyCharacterForm({ character, onCopied, onCancel }) {
 
     if (error) {
       setSubmitting(false);
-      // Postgres error code 23505 = unique constraint violation. We know
-      // the only unique constraint on this table is (world_id, handle),
-      // so we can give a specific, actionable message instead of the raw
-      // database error text.
+      // Postgres error code 23505 = unique constraint violation. Two
+      // possible constraints now — (world_id, handle) or (world_id,
+      // display_name) — so check which one to give a specific message.
       if (error.code === '23505') {
-        setError('That handle is already taken in the destination world — try a different one.');
+        setError(
+          error.message.includes('display_name')
+            ? 'That name is already taken in the destination world — try a different one.'
+            : 'That handle is already taken in the destination world — try a different one.'
+        );
       } else {
         setError(error.message);
       }
@@ -103,6 +107,15 @@ export default function CopyCharacterForm({ character, onCopied, onCancel }) {
           type="text"
           value={handle}
           onChange={(e) => setHandle(e.target.value)}
+          required
+        />
+      </label>
+      <label>
+        Display name in that world
+        <input
+          type="text"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
           required
         />
       </label>
