@@ -5,6 +5,7 @@ import { useAuth } from '../lib/AuthContext.jsx';
 import { downloadCharacterFile } from '../lib/characterFile.js';
 import CopyCharacterForm from './CopyCharacterForm.jsx';
 import ImportCharacterForm from './ImportCharacterForm.jsx';
+import EditCharacterForm from './EditCharacterForm.jsx';
 
 export default function CharacterManager({ worldId }) {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ export default function CharacterManager({ worldId }) {
   // null means none. Only one at a time keeps the UI from getting
   // cluttered with multiple open forms.
   const [copyingId, setCopyingId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
 
   async function fetchCharacters() {
     setLoading(true);
@@ -59,6 +61,9 @@ export default function CharacterManager({ worldId }) {
             </Link>{' '}
             <span>@{character.handle}</span>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+              <button onClick={() => setEditingId(editingId === character.id ? null : character.id)}>
+                {editingId === character.id ? 'Cancel' : 'Edit'}
+              </button>
               <button onClick={() => downloadCharacterFile(character)}>Export</button>
               <button
                 onClick={() => setCopyingId(copyingId === character.id ? null : character.id)}
@@ -67,8 +72,19 @@ export default function CharacterManager({ worldId }) {
               </button>
             </div>
 
-            {/* Only the character currently being copied gets its form
-                rendered — comparing copyingId to this character's id. */}
+            {/* Only the character currently being edited/copied gets its
+                form rendered — comparing the id in state to this row's. */}
+            {editingId === character.id && (
+              <EditCharacterForm
+                character={character}
+                onSaved={(updated) => {
+                  setEditingId(null);
+                  setCharacters((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+                }}
+                onCancel={() => setEditingId(null)}
+              />
+            )}
+
             {copyingId === character.id && (
               <CopyCharacterForm
                 character={character}
