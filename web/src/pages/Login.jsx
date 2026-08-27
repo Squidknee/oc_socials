@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -53,8 +54,7 @@ export default function Login() {
         </label>
         <label className="login-field-label">
           Password
-          <input
-            type="password"
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
