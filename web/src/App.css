@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Antic+Slab&display=swap');
+
 #root {
   background-color: rgba(255, 255, 255, 1);
 }
@@ -10,7 +12,9 @@
 }
 
 .login-title {
-  font-family: Akaya Kanadaka, display;
+  margin: 0 auto;
+  text-align: center;
+  font-family: "Antic Slab", serif;
 }
 
 .application-brand {
