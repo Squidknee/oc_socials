@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { downloadCharacterFile } from '../lib/characterFile.js';
+import { usePlatforms } from '../lib/PlatformsContext.jsx';
 import VerifiedBadge from '../components/VerifiedBadge.jsx';
 
 function getInitials(name) {
@@ -13,14 +14,16 @@ function getInitials(name) {
 }
 
 // A single character's profile page: their master identity, plus one
-// account card per platform they have a presence on (Instagram, Twitter,
-// ...). Each account's own posts live behind that platform's own page,
-// not mixed together here — this profile is the index into them, not a
-// feed itself. Messaging-kind platforms (iMessage) aren't listed since
-// DMs are private, not something a visiting world member browses.
+// account card per feed platform they have a presence on (Instagram,
+// Twitter, ...). Each account's own posts live behind that platform's own
+// page, not mixed together here — this profile is the index into them,
+// not a feed itself. Messaging-kind platforms (iMessage) get their own
+// section instead, since DMs are private — only shown to the owner, not
+// a visiting world member.
 export default function CharacterProfile() {
   const { characterId } = useParams();
   const { user } = useAuth();
+  const { platforms } = usePlatforms();
   const [character, setCharacter] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -112,6 +115,21 @@ export default function CharacterProfile() {
             </Link>
           ))}
         </div>
+
+        {character.owner_id === user.id && (
+          <>
+            <span className="section-label">Messaging</span>
+            <div className="account-list">
+              {platforms.filter((p) => p.kind === 'messaging').map((platform) => (
+                <Link className="account-card" to={`/characters/${characterId}/messages/${platform.slug}`} key={platform.id}>
+                  <div className="account-info">
+                    <span className="platform-chip">{platform.name}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
 
       </div>
     </div>

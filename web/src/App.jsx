@@ -12,6 +12,8 @@ import CreateCharacter from './pages/CreateCharacter.jsx';
 import CharacterProfile from './pages/CharacterProfile.jsx';
 import PlatformAccountProfile from './pages/PlatformAccountProfile.jsx';
 import PlatformFeedPage from './pages/PlatformFeedPage.jsx';
+import MessagesOverview from './pages/MessagesOverview.jsx';
+import ConversationView from './pages/ConversationView.jsx';
 
 function NavBar() {
   const { user, signOut } = useAuth();
@@ -99,6 +101,22 @@ export default function App() {
               element={
                 <RequireAuth>
                   <PlatformAccountProfile />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/characters/:characterId/messages/:platformSlug"
+              element={
+                <RequireAuth>
+                  <MessagesOverview />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/characters/:characterId/messages/:platformSlug/:conversationId"
+              element={
+                <RequireAuth>
+                  <ConversationView />
                 </RequireAuth>
               }
             />
