@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Agdasima&family=Aldrich&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Agdasima&family=Aldrich&family=Balthazar&display=swap');
 
 html,
 body {
@@ -21,6 +21,12 @@ body {
   justify-content: space-between;
   padding: 1rem;
   border-bottom: none;
+}
+
+.application-login-link {
+  color: rgba(255, 255, 255, 1);
+  text-decoration: none;
+  font-family: Balthazar, serif;
 }
 
 .login-container {

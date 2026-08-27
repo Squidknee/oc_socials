@@ -23,7 +23,7 @@ function NavBar() {
       {user ? (
         <button onClick={signOut}>Log Out</button>
       ) : (
-        <Link to="/login">Log In</Link>
+        <Link className="application-login-link" to="/login">Log In</Link>
       )}
     </nav>
   );
