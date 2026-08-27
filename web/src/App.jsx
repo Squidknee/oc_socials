@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/AuthContext.jsx';
+import { PlatformsProvider } from './lib/PlatformsContext.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
 import './App.css';
 import Login from './pages/Login.jsx';
@@ -32,37 +33,39 @@ function NavBar() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <NavBar />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route
-            path="/"
-            element={
-              <RequireAuth>
-                <WorldSelector />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/worlds/:worldId"
-            element={
-              <RequireAuth>
-                <WorldFeed />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/characters/:characterId"
-            element={
-              <RequireAuth>
-                <CharacterProfile />
-              </RequireAuth>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
+      <PlatformsProvider>
+        <BrowserRouter>
+          <NavBar />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route
+              path="/"
+              element={
+                <RequireAuth>
+                  <WorldSelector />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/worlds/:worldId"
+              element={
+                <RequireAuth>
+                  <WorldFeed />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/characters/:characterId"
+              element={
+                <RequireAuth>
+                  <CharacterProfile />
+                </RequireAuth>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </PlatformsProvider>
     </AuthProvider>
   );
 }
