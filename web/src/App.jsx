@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/AuthContext.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
 import './App.css';
-import ocSocialLogo from './oc-social-logo.svg';
 import Login from './pages/Login.jsx';
 import SignUp from './pages/SignUp.jsx';
 import WorldSelector from './pages/WorldSelector.jsx';
@@ -15,7 +14,11 @@ function NavBar() {
   return (
     <nav className="application-nav">
       <Link className="application-brand" to="/">
-        <img className="application-brand-logo" src={ocSocialLogo} alt="OC Social" />
+        <img
+          className="application-brand-logo"
+          src="https://cdn.builder.io/api/v1/image/assets%2F89a27072983244b49ab31c3ad694e8ea%2F8e56f0468e124c7a9c2999c1bcb93624"
+          alt="OC Social"
+        />
       </Link>
       {user ? (
         <button onClick={signOut}>Log Out</button>
