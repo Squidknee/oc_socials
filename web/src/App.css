@@ -1,4 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Agdasima&family=Aldrich&family=Balthazar&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Agdasima&family=Balthazar&display=swap');
+
+/* Fields Display — free-for-personal-use, licensed from fontlot.com (see
+   /public/fonts/fields-display/LICENSE.txt). Replaces Aldrich as the
+   heading/display font. */
+@font-face {
+  font-family: 'Fields Display';
+  src: url('/fonts/fields-display/fontspring-demo-fieldsdisplay-regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fields Display';
+  src: url('/fonts/fields-display/fontspring-demo-fieldsdisplay-medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fields Display';
+  src: url('/fonts/fields-display/fontspring-demo-fieldsdisplay-semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fields Display';
+  src: url('/fonts/fields-display/fontspring-demo-fieldsdisplay-bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fields Display';
+  src: url('/fonts/fields-display/fontspring-demo-fieldsdisplay-extrabold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fields Display';
+  src: url('/fonts/fields-display/fontspring-demo-fieldsdisplay-black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   /* Coffee-shop palette: light Bone page, dark Coffee Bean nav, warm
@@ -67,7 +113,7 @@ body {
   margin: 0 auto;
   text-align: center;
   color: var(--color-text);
-  font-family: Aldrich, sans-serif;
+  font-family: 'Fields Display', sans-serif;
 }
 
 .login-field-label {
@@ -130,7 +176,7 @@ body {
 .panel-title {
   margin: 0;
   color: var(--color-text);
-  font-family: Aldrich, sans-serif;
+  font-family: 'Fields Display', sans-serif;
   font-size: 1.6rem;
   font-weight: 400;
 }
@@ -291,12 +337,12 @@ body {
   align-items: center;
   justify-content: center;
   color: var(--color-text);
-  font-family: Aldrich, sans-serif;
+  font-family: 'Fields Display', sans-serif;
   font-size: 1.5rem;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .identity { flex-grow: 1; display: flex; flex-direction: column; gap: 0.3rem; padding-top: 0.15rem; }
-.display-name { margin: 0; color: var(--color-text); font-family: Aldrich, sans-serif; font-size: 1.4rem; font-weight: 400; }
+.display-name { margin: 0; color: var(--color-text); font-family: 'Fields Display', sans-serif; font-size: 1.4rem; font-weight: 400; }
 .handle { margin: 0; color: var(--color-text-dim); font-size: 1.05rem; }
 .icon-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
 .icon-btn {
@@ -340,7 +386,7 @@ body {
   align-items: center;
   justify-content: center;
   color: var(--color-text);
-  font-family: Aldrich, sans-serif;
+  font-family: 'Fields Display', sans-serif;
   font-size: 0.85rem;
 }
 .account-avatar img { width: 100%; height: 100%; object-fit: cover; }
