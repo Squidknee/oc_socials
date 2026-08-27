@@ -28,6 +28,8 @@ body {
   max-width: 360px;
   margin: 2rem auto;
   background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.08);
 }
 
 .login-title {
