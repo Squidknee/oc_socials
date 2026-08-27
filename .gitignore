@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# env
+.env
+.env.local
+
+# build output
+dist/
+build/
+
+# supabase local dev
+supabase/.branches
+supabase/.temp
+
+# editor/OS
+.DS_Store
+.vscode/
+.idea/
