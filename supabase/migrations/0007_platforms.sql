@@ -73,6 +73,7 @@ create index idx_platform_accounts_character on public.platform_accounts (charac
 -- location — with platform_id deciding which fields actually get used.
 -- (created_at already covers "timestamp"; content already covers
 -- "caption"; media_url already covers "image".)
+drop policy if exists "posts_insert_own_character" on public.posts;
 alter table public.posts drop column character_id;
 alter table public.posts add column platform_account_id uuid not null references public.platform_accounts(id) on delete cascade;
 alter table public.posts add column platform_id uuid not null references public.platforms(id) on delete cascade;
@@ -114,9 +115,11 @@ create trigger validate_post_before_write
   for each row execute function public.validate_post_against_platform();
 
 -- COMMENTS / LIKES: same author swap as posts.
+drop policy if exists "comments_insert_own_character" on public.comments;
 alter table public.comments drop column character_id;
 alter table public.comments add column platform_account_id uuid not null references public.platform_accounts(id) on delete cascade;
 
+drop policy if exists "likes_insert_own_character" on public.likes;
 alter table public.likes drop column character_id;
 alter table public.likes add column platform_account_id uuid not null references public.platform_accounts(id) on delete cascade;
 alter table public.likes add constraint likes_post_id_platform_account_id_key unique (post_id, platform_account_id);
@@ -155,9 +158,10 @@ create policy "platform_accounts_delete_owner" on public.platform_accounts for d
 -- posts/comments/likes SELECT policies didn't reference character_id, so
 -- they keep working unchanged. INSERT policies need to check ownership
 -- via platform_accounts -> characters instead of the old direct
--- character_id link.
+-- character_id link. (The old INSERT policies were already dropped above,
+-- before their columns were dropped — a CHECK/policy can't be dropped
+-- after the column it depends on is gone.)
 
-drop policy if exists "posts_insert_own_character" on public.posts;
 create policy "posts_insert_own_platform_account" on public.posts for insert with check (
   exists (
     select 1 from public.platform_accounts pa
@@ -169,7 +173,6 @@ create policy "posts_insert_own_platform_account" on public.posts for insert wit
   )
 );
 
-drop policy if exists "comments_insert_own_character" on public.comments;
 create policy "comments_insert_own_platform_account" on public.comments for insert with check (
   exists (
     select 1 from public.platform_accounts pa
@@ -178,7 +181,6 @@ create policy "comments_insert_own_platform_account" on public.comments for inse
   )
 );
 
-drop policy if exists "likes_insert_own_character" on public.likes;
 create policy "likes_insert_own_platform_account" on public.likes for insert with check (
   exists (
     select 1 from public.platform_accounts pa
