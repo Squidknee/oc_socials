@@ -1,14 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Antic+Slab&display=swap');
 
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
 #root {
-  background-color: rgba(255, 255, 255, 1);
+  min-height: 100vh;
+  background-color: rgba(136, 143, 203, 1);
 }
 
 .application-nav {
   display: flex;
   justify-content: space-between;
   padding: 1rem;
-  border-bottom: 1px solid #ddd;
+  border-bottom: none;
+}
+
+.login-container {
+  padding: 1rem;
+  max-width: 360px;
+  margin: 2rem auto;
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .login-title {
