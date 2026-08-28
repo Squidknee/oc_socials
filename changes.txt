@@ -48,3 +48,13 @@ also mention if you have unread messages as a character on a screen
 remove date from message
 
 comment deletion live update
+
+delete unused media files uploaded by users
+
+favicon 
+
+what happens if you dont have a character yet on the whats new page
+what happens when you have posts, delete your account, and then reupload. do posts stay the same? get remade? do they populate in order? 
+whats new should be chronological? 
+
+fill in like button?
