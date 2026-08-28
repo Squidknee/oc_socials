@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient.js';
 
 // Shared like/comment/media logic for every platform's post skin —
@@ -14,6 +14,20 @@ export function usePostInteractions(post, viewerAccountId) {
   const [newComment, setNewComment] = useState('');
   const [postingComment, setPostingComment] = useState(false);
 
+  // Lets the comments realtime handler (subscribed once per post.id, not
+  // once per open/close) read the current panel state without needing to
+  // resubscribe every time it's toggled.
+  const commentsOpenRef = useRef(commentsOpen);
+  useEffect(() => {
+    commentsOpenRef.current = commentsOpen;
+  }, [commentsOpen]);
+
+  // Comment ids already counted (by either the poster's own optimistic
+  // update or an earlier realtime event) — a plain count has no "have I
+  // seen this row" check the way likeRows' own list does, so this stands
+  // in for one to stop your own comment being counted twice.
+  const seenCommentIds = useRef(new Set());
+
   useEffect(() => {
     async function fetchMedia() {
       const { data } = await supabase
@@ -27,7 +41,7 @@ export function usePostInteractions(post, viewerAccountId) {
     async function fetchLikes() {
       const { data } = await supabase
         .from('likes')
-        .select('platform_account_id, platform_accounts ( display_name )')
+        .select('id, platform_account_id, platform_accounts ( display_name )')
         .eq('post_id', post.id);
       setLikeRows(data ?? []);
     }
@@ -45,6 +59,61 @@ export function usePostInteractions(post, viewerAccountId) {
     fetchCommentCount();
   }, [post.id]);
 
+  // Live likes: messages_select_participant's counterpart here is
+  // likes_select_member (0001) — unchanged, still the real gate on what
+  // this client receives. INSERT is deduped against likeRows by id since
+  // toggleLike already adds your own like optimistically.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`likes:${post.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'likes', filter: `post_id=eq.${post.id}` },
+        (payload) => {
+          setLikeRows((rows) =>
+            rows.some((r) => r.id === payload.new.id)
+              ? rows
+              : [...rows, { id: payload.new.id, platform_account_id: payload.new.platform_account_id, platform_accounts: null }]
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'likes', filter: `post_id=eq.${post.id}` },
+        (payload) => {
+          setLikeRows((rows) => rows.filter((r) => r.id !== payload.old.id));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [post.id]);
+
+  // Live comments: only refetches the full (joined) list when the panel
+  // is actually open — otherwise just bumps the count, same cost as the
+  // original head-count-only fetch.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`comments:${post.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'comments', filter: `post_id=eq.${post.id}` },
+        (payload) => {
+          if (seenCommentIds.current.has(payload.new.id)) return;
+          seenCommentIds.current.add(payload.new.id);
+          setCommentCount((n) => n + 1);
+          if (commentsOpenRef.current) loadComments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [post.id]);
+
   const viewerHasLiked = viewerAccountId ? likeRows.some((r) => r.platform_account_id === viewerAccountId) : false;
   const realLikeCount = likeRows.length;
 
@@ -56,8 +125,15 @@ export function usePostInteractions(post, viewerAccountId) {
       await supabase.from('likes').delete().eq('post_id', post.id).eq('platform_account_id', viewerAccountId);
       setLikeRows((rows) => rows.filter((r) => r.platform_account_id !== viewerAccountId));
     } else {
-      await supabase.from('likes').insert({ post_id: post.id, platform_account_id: viewerAccountId });
-      setLikeRows((rows) => [...rows, { platform_account_id: viewerAccountId, platform_accounts: null }]);
+      // Needs the real row back (not just an optimistic placeholder) so
+      // the live INSERT echo for this same like can recognize it by id
+      // and skip re-adding it.
+      const { data } = await supabase
+        .from('likes')
+        .insert({ post_id: post.id, platform_account_id: viewerAccountId })
+        .select('id, platform_account_id, platform_accounts ( display_name )')
+        .single();
+      if (data) setLikeRows((rows) => [...rows, data]);
     }
 
     setLikeBusy(false);
@@ -83,14 +159,22 @@ export function usePostInteractions(post, viewerAccountId) {
     if (!viewerAccountId || !newComment.trim()) return;
     setPostingComment(true);
 
-    const { error } = await supabase
+    // Needs the real row's id back so it can be marked "seen" before the
+    // live INSERT echo for this same comment arrives — otherwise it'd get
+    // counted twice, once here and once by the realtime handler.
+    const { data, error } = await supabase
       .from('comments')
-      .insert({ post_id: post.id, platform_account_id: viewerAccountId, content: newComment.trim() });
+      .insert({ post_id: post.id, platform_account_id: viewerAccountId, content: newComment.trim() })
+      .select('id')
+      .single();
 
     setPostingComment(false);
     if (!error) {
       setNewComment('');
-      setCommentCount((n) => n + 1);
+      if (data && !seenCommentIds.current.has(data.id)) {
+        seenCommentIds.current.add(data.id);
+        setCommentCount((n) => n + 1);
+      }
       loadComments();
     }
   }

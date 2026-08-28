@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { usePlatforms } from '../lib/PlatformsContext.jsx';
 import { fetchViewerAccountId } from '../lib/platformAccounts.js';
+import { POST_SELECT, fetchPostById } from '../lib/posts.js';
 import Post from '../components/posts/Post.jsx';
 import '../components/profiles/profiles.css';
 
@@ -27,9 +28,7 @@ export default function PlatformFeedPage() {
     async function fetchPosts() {
       const { data, error } = await supabase
         .from('posts')
-        .select(
-          'id, content, created_at, base_like_count, retweet_count, client_label, media_url, media_kind, platform_accounts ( id, handle, display_name, avatar_url, verified, platforms ( slug, name ) )'
-        )
+        .select(POST_SELECT)
         .eq('world_id', worldId)
         .eq('platform_id', platform.id)
         .order('created_at', { ascending: false });
@@ -45,6 +44,30 @@ export default function PlatformFeedPage() {
     fetchPosts();
     fetchViewerAccountId({ worldId, platformSlug: slug, userId: user.id }).then(setViewerAccountId);
   }, [worldId, slug, platform?.id, user.id]);
+
+  // Live timeline: postgres_changes can only filter on one column, so this
+  // subscribes per-world and drops anything not on this platform itself.
+  useEffect(() => {
+    if (!platform) return;
+
+    const channel = supabase
+      .channel(`platform-feed:${worldId}:${platform.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'posts', filter: `world_id=eq.${worldId}` },
+        async (payload) => {
+          if (payload.new.platform_id !== platform.id) return;
+          const post = await fetchPostById(payload.new.id);
+          if (!post) return;
+          setPosts((prev) => (prev.some((p) => p.id === post.id) ? prev : [post, ...prev]));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [worldId, platform?.id]);
 
   if (!platform) return <p style={{ padding: '1rem' }}>Unknown platform.</p>;
 

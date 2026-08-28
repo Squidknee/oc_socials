@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { fetchViewerAccountsBySlug } from '../lib/platformAccounts.js';
+import { POST_SELECT, fetchPostById } from '../lib/posts.js';
 import { setCurrentWorldId } from '../lib/currentWorld.js';
 import CharacterManager from '../components/CharacterManager.jsx';
 import Post from '../components/posts/Post.jsx';
@@ -42,9 +43,7 @@ export default function WorldFeed() {
     async function fetchRecentPosts() {
       const { data } = await supabase
         .from('posts')
-        .select(
-          'id, content, created_at, base_like_count, retweet_count, client_label, media_url, media_kind, platform_accounts ( id, handle, display_name, avatar_url, verified, platforms ( slug, name ) )'
-        )
+        .select(POST_SELECT)
         .eq('world_id', worldId)
         .order('created_at', { ascending: false })
         .limit(RECENT_POSTS_LIMIT);
@@ -57,6 +56,30 @@ export default function WorldFeed() {
     fetchViewerAccountsBySlug({ worldId, userId: user.id }).then(setViewerAccountsBySlug);
     setCurrentWorldId(worldId);
   }, [worldId, user.id]);
+
+  // Live "What's New": postgres_changes only hands back the raw posts
+  // row, so hydrate it with the same join the initial fetch uses before
+  // dropping it into the preview list.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`world-posts:${worldId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'posts', filter: `world_id=eq.${worldId}` },
+        async (payload) => {
+          const post = await fetchPostById(payload.new.id);
+          if (!post) return;
+          setRecentPosts((prev) =>
+            prev.some((p) => p.id === post.id) ? prev : [post, ...prev].slice(0, RECENT_POSTS_LIMIT)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [worldId]);
 
   async function handleGenerateInvite() {
     setGeneratingInvite(true);
