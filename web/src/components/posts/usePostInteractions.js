@@ -133,20 +133,26 @@ export function usePostInteractions(post, viewerAccountId) {
   const viewerHasLiked = viewerAccountId ? likeRows.some((r) => r.platform_account_id === viewerAccountId) : false;
   const realLikeCount = likeRows.length;
 
-  async function toggleLike() {
-    if (!viewerAccountId || likeBusy) return;
+  // overrideAccountId lets a caller act as a character it just picked for
+  // this one action (World overview's per-interaction "act as" picker),
+  // without needing viewerAccountId itself to become a persistent choice.
+  // Every other page just calls toggleLike() and gets the old behavior.
+  async function toggleLike(overrideAccountId) {
+    const accountId = overrideAccountId ?? viewerAccountId;
+    if (!accountId || likeBusy) return;
     setLikeBusy(true);
 
-    if (viewerHasLiked) {
-      await supabase.from('likes').delete().eq('post_id', post.id).eq('platform_account_id', viewerAccountId);
-      setLikeRows((rows) => rows.filter((r) => r.platform_account_id !== viewerAccountId));
+    const hasLiked = likeRows.some((r) => r.platform_account_id === accountId);
+    if (hasLiked) {
+      await supabase.from('likes').delete().eq('post_id', post.id).eq('platform_account_id', accountId);
+      setLikeRows((rows) => rows.filter((r) => r.platform_account_id !== accountId));
     } else {
       // Needs the real row back (not just an optimistic placeholder) so
       // the live INSERT echo for this same like can recognize it by id
       // and skip re-adding it.
       const { data } = await supabase
         .from('likes')
-        .insert({ post_id: post.id, platform_account_id: viewerAccountId })
+        .insert({ post_id: post.id, platform_account_id: accountId })
         .select('id, platform_account_id, platform_accounts ( display_name )')
         .single();
       if (data) setLikeRows((rows) => [...rows, data]);
@@ -187,9 +193,11 @@ export function usePostInteractions(post, viewerAccountId) {
     if (opening && comments.length === 0) loadComments();
   }
 
-  async function handleAddComment(e) {
+  // Same overrideAccountId pattern as toggleLike, for the same reason.
+  async function handleAddComment(e, overrideAccountId) {
     e.preventDefault();
-    if (!viewerAccountId || !newComment.trim()) return;
+    const accountId = overrideAccountId ?? viewerAccountId;
+    if (!accountId || !newComment.trim()) return;
     setPostingComment(true);
 
     // Needs the real row's id back so it can be marked "seen" before the
@@ -197,7 +205,7 @@ export function usePostInteractions(post, viewerAccountId) {
     // counted twice, once here and once by the realtime handler.
     const { data, error } = await supabase
       .from('comments')
-      .insert({ post_id: post.id, platform_account_id: viewerAccountId, content: newComment.trim() })
+      .insert({ post_id: post.id, platform_account_id: accountId, content: newComment.trim() })
       .select('id')
       .single();
 

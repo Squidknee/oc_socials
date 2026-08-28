@@ -10,7 +10,11 @@ const SKINS = {
   twitter: TwitterPost,
 };
 
-export default function Post({ post, viewerAccountId }) {
+// candidateAccounts is optional — only WorldFeed's mixed feed supplies
+// it, for its per-interaction "act as" picker. Pages with a
+// single-platform default viewerAccountId just don't pass it, and the
+// skins treat an empty candidate list as "nothing to offer."
+export default function Post({ post, viewerAccountId, candidateAccounts }) {
   const slug = post.platform_accounts?.platforms?.slug;
   const Skin = SKINS[slug];
 
@@ -19,5 +23,5 @@ export default function Post({ post, viewerAccountId }) {
     return null;
   }
 
-  return <Skin post={post} viewerAccountId={viewerAccountId} />;
+  return <Skin post={post} viewerAccountId={viewerAccountId} candidateAccounts={candidateAccounts} />;
 }

@@ -122,6 +122,7 @@
   gap: 4px;
   margin-top: 2px;
   margin-left: -8px;
+  position: relative;
 }
 .tw-action {
   display: flex;
@@ -220,3 +221,63 @@
 }
 .tw-comment-form button:hover { background: var(--accent-hover); }
 .tw-comment-form button:disabled { background: #d6cec7; cursor: default; }
+
+/* "Act as" dropdown — opens when liking/commenting with no character
+   chosen yet for this platform (a feed that mixes platforms can't just
+   default to one), and closes again the instant you pick, since nothing
+   here persists a choice between interactions. Anchored to
+   .tw-post-actions (position: relative, above), so it appears in the
+   same spot whether opened from the like button or the comment box. */
+.tw-account-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 170px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(26, 21, 18, 0.18);
+  padding: 6px;
+}
+.tw-account-dropdown-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 4px 8px 2px;
+}
+.tw-account-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.tw-account-dropdown-item:hover { background: var(--accent-wash); }
+.tw-account-dropdown-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--placeholder);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.tw-account-dropdown-avatar img { width: 100%; height: 100%; object-fit: cover; }

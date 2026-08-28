@@ -10,7 +10,7 @@ import PostComposer from '../../composer/PostComposer.jsx';
 import '../posts.css';
 
 // Renders one post the way this world's "Instagram" would show it.
-export default function InstagramPost({ post: postProp, viewerAccountId }) {
+export default function InstagramPost({ post: postProp, viewerAccountId, candidateAccounts = [] }) {
   const { user } = useAuth();
   // Local copy so a successful edit reflects immediately without needing
   // to thread an update callback up through every page that renders a
@@ -30,6 +30,47 @@ export default function InstagramPost({ post: postProp, viewerAccountId }) {
   const [editing, setEditing] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // Nothing here ever persists a chosen account — every like/comment
+  // interaction prompts fresh, by design (World overview's per-post
+  // picker, not a switcher you set once). pendingAction tracks which
+  // interaction the dropdown is currently answering for, since liking
+  // and commenting react to a pick differently: a like fires immediately,
+  // a comment just unlocks the input for one submission.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null); // 'like' | 'comment'
+  const [commentAsAccountId, setCommentAsAccountId] = useState(null);
+  const canPickAccount = !viewerAccountId && candidateAccounts.length > 0;
+  const effectiveCommentAccountId = viewerAccountId ?? commentAsAccountId;
+
+  function pickAccount(accountId) {
+    setPickerOpen(false);
+    if (pendingAction === 'like') toggleLike(accountId);
+    else if (pendingAction === 'comment') setCommentAsAccountId(accountId);
+    setPendingAction(null);
+  }
+
+  function handleLikeClick() {
+    if (canPickAccount) {
+      setPendingAction('like');
+      setPickerOpen((v) => !v);
+      return;
+    }
+    toggleLike();
+  }
+
+  function handleCommentInputFocus(e) {
+    if (!effectiveCommentAccountId && candidateAccounts.length > 0) {
+      e.target.blur();
+      setPendingAction('comment');
+      setPickerOpen(true);
+    }
+  }
+
+  async function submitComment(e) {
+    await handleAddComment(e, effectiveCommentAccountId);
+    // Forgotten immediately after use — the next comment has to pick again.
+    setCommentAsAccountId(null);
+  }
 
   async function handleDelete() {
     const confirmed = window.confirm("Delete this post? This can't be undone.");
@@ -135,7 +176,13 @@ export default function InstagramPost({ post: postProp, viewerAccountId }) {
       )}
 
       <div className="ig-post-actions">
-        <button className={`ig-action-btn${viewerHasLiked ? ' is-liked' : ''}`} type="button" onClick={toggleLike} disabled={!viewerAccountId || likeBusy} title={viewerAccountId ? undefined : 'Pick a character to act as first'}>
+        <button
+          className={`ig-action-btn${viewerHasLiked ? ' is-liked' : ''}`}
+          type="button"
+          onClick={handleLikeClick}
+          disabled={(!viewerAccountId && !canPickAccount) || likeBusy}
+          title={viewerAccountId ? undefined : canPickAccount ? 'Pick a character to act as' : 'Pick a character to act as first'}
+        >
           <svg width="22" height="22" viewBox="0 0 24 24" fill={viewerHasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 20s-7.2-4.4-9.5-9A5.4 5.4 0 0 1 12 6.2 5.4 5.4 0 0 1 21.5 11c-2.3 4.6-9.5 9-9.5 9z" />
           </svg>
@@ -160,6 +207,20 @@ export default function InstagramPost({ post: postProp, viewerAccountId }) {
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16" /><path d="M9 7V5h6v2" /><path d="M6 7l1 13h10l1-13" /></svg>
             </button>
           </>
+        )}
+
+        {pickerOpen && (
+          <div className="ig-account-dropdown">
+            <span className="ig-account-dropdown-label">Act as</span>
+            {candidateAccounts.map((c) => (
+              <button key={c.accountId} type="button" className="ig-account-dropdown-item" onClick={() => pickAccount(c.accountId)}>
+                <span className="ig-account-dropdown-avatar">
+                  {c.avatarUrl ? <img src={c.avatarUrl} alt="" /> : c.displayName?.[0]?.toUpperCase()}
+                </span>
+                {c.displayName}
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
@@ -200,15 +261,16 @@ export default function InstagramPost({ post: postProp, viewerAccountId }) {
               )}
             </p>
           ))}
-          <form className="ig-comment-form" onSubmit={handleAddComment}>
+          <form className="ig-comment-form" onSubmit={submitComment}>
             <input
               type="text"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder={viewerAccountId ? 'Add a comment…' : 'Pick a character to act as first'}
-              disabled={!viewerAccountId || postingComment}
+              onFocus={handleCommentInputFocus}
+              placeholder={effectiveCommentAccountId ? 'Add a comment…' : candidateAccounts.length > 0 ? 'Pick a character to act as' : 'Pick a character to act as first'}
+              disabled={(!effectiveCommentAccountId && candidateAccounts.length === 0) || postingComment}
             />
-            <button type="submit" disabled={!viewerAccountId || !newComment.trim() || postingComment}>
+            <button type="submit" disabled={!effectiveCommentAccountId || !newComment.trim() || postingComment}>
               Post
             </button>
           </form>

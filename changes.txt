@@ -46,3 +46,5 @@ so whats new doesnt get long, maybe make it self contained and scrollable?
 also mention if you have unread messages as a character on a screen
 
 remove date from message
+
+comment deletion live update

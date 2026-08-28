@@ -38,6 +38,12 @@ export default function WorldFeed() {
   const [invite, setInvite] = useState(null);
   const [generatingInvite, setGeneratingInvite] = useState(false);
   const [editWorldOpen, setEditWorldOpen] = useState(false);
+  // Candidates for each post's own "act as" picker (see InstagramPost/
+  // TwitterPost) — every character you own here, grouped by platform
+  // slug. Deliberately not "which one is currently acting" — nothing here
+  // persists a choice across posts or interactions; every like/comment
+  // prompts you to pick fresh, by design.
+  const [myAccountsBySlug, setMyAccountsBySlug] = useState({});
 
   useEffect(() => {
     async function fetchWorld() {
@@ -61,6 +67,33 @@ export default function WorldFeed() {
       setOtherCharacters(data ?? []);
     }
 
+    // Candidates for the per-post "act as" picker — every character you
+    // own here, with whichever platform accounts they have. Grouped by
+    // slug since a post's picker only ever needs candidates for that
+    // post's own platform.
+    async function fetchMyAccounts() {
+      const { data } = await supabase
+        .from('characters')
+        .select('id, display_name, avatar_url, platform_accounts ( id, platforms ( slug ) )')
+        .eq('world_id', worldId)
+        .eq('owner_id', user.id);
+
+      const bySlug = {};
+      for (const character of data ?? []) {
+        for (const account of character.platform_accounts ?? []) {
+          const slug = account.platforms?.slug;
+          if (!slug) continue;
+          (bySlug[slug] ??= []).push({
+            accountId: account.id,
+            characterId: character.id,
+            displayName: character.display_name,
+            avatarUrl: character.avatar_url,
+          });
+        }
+      }
+      setMyAccountsBySlug(bySlug);
+    }
+
     async function fetchRecentPosts() {
       const { data } = await supabase
         .from('posts')
@@ -73,6 +106,7 @@ export default function WorldFeed() {
 
     fetchWorld();
     fetchOtherCharacters();
+    fetchMyAccounts();
     fetchRecentPosts();
     setCurrentWorldId(worldId);
   }, [worldId, user.id]);
@@ -213,13 +247,23 @@ export default function WorldFeed() {
             {recentPosts.length === 0 ? (
               <p className="hub-empty">No posts yet in this world.</p>
             ) : (
-              // No viewerAccountId here on purpose — this feed mixes
-              // platforms with no single "acting as" context, and there's
-              // no character picker on this page. usePostInteractions
-              // already disables like/comment and shows "Pick a character
-              // to act as first" whenever it's null; the full-platform
-              // feed (PlatformFeedPage) still supplies its own.
-              recentPosts.map((post) => <Post key={post.id} post={post} viewerAccountId={null} />)
+              // No viewerAccountId here, ever — this feed mixes platforms
+              // with no single "acting as" context, and by design nothing
+              // persists a choice across interactions. Liking or
+              // commenting instead offers a per-interaction "act as"
+              // picker (candidateAccounts) built from your characters
+              // that have an account on that specific post's platform.
+              recentPosts.map((post) => {
+                const slug = post.platform_accounts?.platforms?.slug;
+                return (
+                  <Post
+                    key={post.id}
+                    post={post}
+                    viewerAccountId={null}
+                    candidateAccounts={myAccountsBySlug[slug] ?? []}
+                  />
+                );
+              })
             )}
           </div>
         </div>
