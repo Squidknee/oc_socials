@@ -68,5 +68,4 @@ iMessage:
         your messages go on the right and the recieving messages go on the left
         time stamps per message cluster, and have read status be toggable
         at the bottom there is a text box where you can include your message (the blank box has placeholder message text inside)
-        beside the text box there is a plus sign for adding images 
-
+        beside the text box there is a plus sign for adding images.
