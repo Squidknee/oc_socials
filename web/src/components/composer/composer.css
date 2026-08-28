@@ -1,114 +1,285 @@
-/* Shared light-card composer styling, reused by every platform's composer
-   skin — the fields differ per platform (see each skin component), but
-   the container look doesn't need to reinvent itself for each one. */
+/* Shared composer chrome — polished (design 1b).
+   Drop-in replacement for web/src/components/composer/composer.css
+   Adds: a "posting as" header, a grouped "fake the numbers" block, a
+   media button in a toolbar row, and a footer bar. */
 
 .composer {
+  --ink: #1a1512;
+  --ink-soft: #3d332c;
+  --muted: #8a7c72;
+  --faint: #a2958b;
+  --line: rgba(37, 23, 20, 0.12);
+  --line-soft: rgba(37, 23, 20, 0.08);
+  --sunk: #faf8f6;
+  --alt: #f2ede8;
+  --placeholder: #efe9e2;
+  --accent: #4a8aa4;
+  --accent-hover: #3f7590;
+  --accent-wash: rgba(74, 138, 164, 0.1);
+
   width: 100%;
   max-width: 470px;
-  background: #fefefe;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  padding: 1.1rem;
-  margin: 0 auto 1.25rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin: 0 auto 20px;
   font-family: system-ui, sans-serif;
-  color: #262626;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
+  color: var(--ink);
   box-sizing: border-box;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(37, 23, 20, 0.05), 0 8px 24px rgba(37, 23, 20, 0.05);
 }
-.composer-title { margin: 0; font-size: 1.05rem; font-weight: 600; }
 
-.composer-media-list { display: flex; flex-direction: column; gap: 0.5rem; }
-.composer-media-row { display: flex; gap: 0.5rem; align-items: center; }
+/* ---------- "posting as" header (replaces .composer-title) ---------- */
+
+.composer-as {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--sunk);
+}
+.composer-as-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--placeholder);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.composer-as-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.composer-as-text { display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0; }
+.composer-as-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.composer-as-handle { font-size: 14px; font-weight: 600; }
+.composer-platform-chip {
+  flex-shrink: 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-wash);
+  border-radius: 999px;
+  padding: 4px 9px;
+  line-height: 1;
+}
+
+/* ---------- body ---------- */
+
+.composer-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+.composer-caption {
+  width: 100%;
+  min-height: 88px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  font-family: inherit;
+  color: var(--ink);
+  background: #fff;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 120ms ease;
+}
+.composer-caption:focus { border-color: var(--accent); }
+
+/* ---------- toolbar row: media button, hint, char count ---------- */
+
+.composer-toolbar { display: flex; align-items: center; gap: 8px; }
+.composer-media-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 7px 12px;
+  font-size: 13.5px;
+  font-weight: 550;
+  font-family: inherit;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.composer-media-btn:hover { background: var(--alt); }
+.composer-media-btn:disabled { color: var(--faint); cursor: default; }
+.composer-hint { font-size: 12.5px; color: var(--faint); }
+.composer-charcount {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.composer-charcount.over { color: #c2415c; font-weight: 600; }
+
+/* ---------- media rows ---------- */
+
+.composer-media-list { display: flex; flex-direction: column; gap: 8px; }
+.composer-media-row { display: flex; gap: 8px; align-items: center; }
 .composer-media-row input {
   flex-grow: 1;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 0.4rem;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.88rem;
-  font-family: system-ui, sans-serif;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
 }
+.composer-media-row input:focus { border-color: var(--accent); }
 .composer-media-row select {
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 0.4rem;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-size: 13.5px;
   background: #fff;
-  font-family: system-ui, sans-serif;
+  font-family: inherit;
 }
 .composer-upload-btn {
   flex-shrink: 0;
-  background: #f3f4f6;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 0.4rem;
-  padding: 0.4rem 0.7rem;
-  font-size: 0.82rem;
-  font-family: system-ui, sans-serif;
-  color: #262626;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 11px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--ink-soft);
   cursor: pointer;
   white-space: nowrap;
 }
-.composer-upload-btn:hover { background: #e9eaec; }
-.composer-upload-btn:disabled { color: #8e8e8e; cursor: default; }
-
+.composer-upload-btn:hover { background: var(--alt); }
+.composer-upload-btn:disabled { color: var(--faint); cursor: default; }
 .composer-remove-media {
   background: none;
   border: none;
   cursor: pointer;
-  color: #8e8e8e;
+  color: var(--muted);
   display: flex;
   align-items: center;
-  padding: 0.2rem;
+  padding: 4px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
-.composer-remove-media:hover { color: #262626; }
+.composer-remove-media:hover { color: var(--ink); background: var(--alt); }
 .composer-add-media {
   align-self: flex-start;
   background: none;
   border: none;
-  color: #3b82f6;
+  color: var(--accent);
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: 13.5px;
+  font-family: inherit;
   cursor: pointer;
   padding: 0;
 }
 
-.composer-caption {
-  width: 100%;
-  min-height: 70px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 0.4rem;
-  padding: 0.55rem 0.7rem;
-  font-size: 0.9rem;
-  font-family: system-ui, sans-serif;
-  resize: vertical;
-  box-sizing: border-box;
-}
-.composer-charcount { text-align: right; font-size: 0.78rem; color: #8e8e8e; margin-top: -0.5rem; }
+/* ---------- grouped "fake the numbers" block ---------- */
 
-.composer-row { display: flex; gap: 1rem; }
-.composer-row label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem; color: #555; flex: 1; }
+.composer-fakes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--sunk);
+  border: 1px solid rgba(37, 23, 20, 0.1);
+  border-radius: 10px;
+  padding: 12px;
+}
+.composer-fakes-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.composer-row { display: flex; gap: 10px; }
+.composer-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  color: #6b5d54;
+  flex: 1;
+}
+.composer-row label.wide { flex: 1.4; }
 .composer-row input {
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 0.4rem;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.88rem;
-  font-family: system-ui, sans-serif;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  outline: none;
   box-sizing: border-box;
 }
+.composer-row input:focus { border-color: var(--accent); }
 
-.composer-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.25rem; }
-.composer-cancel { background: none; border: none; color: #8e8e8e; font-size: 0.9rem; cursor: pointer; }
-.composer-submit {
-  background: #3b82f6;
-  color: #fff;
+/* ---------- backdating, folded away until asked for ---------- */
+
+.composer-schedule { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.composer-schedule-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
   border: none;
-  border-radius: 0.4rem;
-  padding: 0.5rem 1.1rem;
-  font-weight: 600;
-  font-size: 0.9rem;
+  padding: 0;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--accent);
+  font-weight: 550;
   cursor: pointer;
 }
-.composer-submit:disabled { background: #a9c8f5; cursor: default; }
+.composer-schedule-hint { font-size: 12.5px; color: var(--faint); }
+
+/* ---------- footer ---------- */
+
+.composer-error { margin: 0; color: #c2415c; font-size: 13.5px; }
+
+.composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line-soft);
+  background: var(--sunk);
+}
+.composer-cancel {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.composer-cancel:hover { color: var(--ink); }
+.composer-submit {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 9px 20px;
+  font-weight: 600;
+  font-size: 14.5px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.composer-submit:hover { background: var(--accent-hover); }
+.composer-submit:disabled { background: #d6cec7; cursor: default; }

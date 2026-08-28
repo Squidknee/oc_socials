@@ -8,6 +8,8 @@ import { supabase } from '../../lib/supabaseClient.js';
 export function useFollow({ followedAccountId, viewerAccountId, worldId }) {
   const [following, setFollowing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
     if (!viewerAccountId || viewerAccountId === followedAccountId) {
@@ -28,6 +30,22 @@ export function useFollow({ followedAccountId, viewerAccountId, worldId }) {
     fetchFollow();
   }, [followedAccountId, viewerAccountId]);
 
+  // The profile's own stat-row counts — who follows it, who it follows —
+  // independent of whichever account the current viewer happens to be
+  // acting as, so these load even for a viewer with no account here yet.
+  useEffect(() => {
+    async function fetchCounts() {
+      const [{ count: followers }, { count: followingTotal }] = await Promise.all([
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('followed_account_id', followedAccountId),
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_account_id', followedAccountId),
+      ]);
+      setFollowerCount(followers ?? 0);
+      setFollowingCount(followingTotal ?? 0);
+    }
+
+    fetchCounts();
+  }, [followedAccountId]);
+
   async function toggleFollow() {
     if (!viewerAccountId || busy) return;
     setBusy(true);
@@ -39,17 +57,21 @@ export function useFollow({ followedAccountId, viewerAccountId, worldId }) {
         .eq('follower_account_id', viewerAccountId)
         .eq('followed_account_id', followedAccountId);
       setFollowing(false);
+      setFollowerCount((n) => Math.max(0, n - 1));
     } else {
       const { error } = await supabase.from('follows').insert({
         follower_account_id: viewerAccountId,
         followed_account_id: followedAccountId,
         world_id: worldId,
       });
-      if (!error) setFollowing(true);
+      if (!error) {
+        setFollowing(true);
+        setFollowerCount((n) => n + 1);
+      }
     }
 
     setBusy(false);
   }
 
-  return { following, toggleFollow, busy };
+  return { following, toggleFollow, busy, followerCount, followingCount };
 }

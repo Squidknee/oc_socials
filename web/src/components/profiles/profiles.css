@@ -1,83 +1,170 @@
-/* Shared light "app profile" chrome, reused by every platform's profile
-   skin — the header content and post list differ per platform, but the
-   page shell doesn't need to reinvent itself for each one. */
+/* Shared profile chrome — polished (design 1b).
+   Drop-in replacement for web/src/components/profiles/profiles.css
+   Adds: character crumb, segmented tabs, stat row, post grid. */
 
 .profile-page {
+  --ink: #1a1512;
+  --ink-soft: #3d332c;
+  --muted: #8a7c72;
+  --faint: #a2958b;
+  --line: rgba(37, 23, 20, 0.12);
+  --line-soft: rgba(37, 23, 20, 0.1);
+  --sunk: #faf8f6;
+  --alt: #f2ede8;
+  --placeholder: #efe9e2;
+  --accent: #4a8aa4;
+  --accent-hover: #3f7590;
+  --accent-wash: rgba(74, 138, 164, 0.1);
+
   max-width: 600px;
   margin: 0 auto;
-  padding: 2rem 1rem 3rem;
+  padding: 32px 16px 48px;
   font-family: system-ui, sans-serif;
-  color: #262626;
+  color: var(--ink);
+  box-sizing: border-box;
 }
 
-.profile-tabs { display: flex; gap: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
-.profile-tab {
-  padding-bottom: 0.6rem;
-  font-size: 0.95rem;
-  color: #8e8e8e;
+/* NEW — "back to <character> · <world>", so an account page never feels
+   detached from the character who owns it */
+.profile-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13.5px;
+  color: var(--muted);
   text-decoration: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  margin-bottom: 16px;
 }
-.profile-tab.active { color: #262626; font-weight: 600; border-bottom-color: #262626; }
+.profile-crumb:hover { color: var(--ink); }
+
+/* ---------- segmented tabs (replaces the underline tabs) ---------- */
+
+.profile-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--alt);
+  border-radius: 10px;
+  padding: 4px;
+  border: none;
+}
+.profile-tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 7px;
+  border: none;
+  margin: 0;
+}
+.profile-tab:hover { color: var(--ink); }
+.profile-tab.active {
+  color: var(--ink);
+  font-weight: 600;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(37, 23, 20, 0.08);
+}
+
+/* ---------- header ---------- */
 
 .profile-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  margin-bottom: 1.25rem;
+  gap: 16px;
+  padding: 0;
+  border: none;
+  margin-bottom: 18px;
 }
-.profile-header-main { display: flex; align-items: center; gap: 1.5rem; }
-.profile-actions { display: flex; flex-direction: column; gap: 0.5rem; flex-shrink: 0; }
+.profile-header-main { display: flex; align-items: flex-start; gap: 20px; flex-grow: 1; min-width: 0; }
 .profile-avatar {
   width: 88px;
   height: 88px;
   border-radius: 50%;
   overflow: hidden;
-  background: #eee;
+  background: var(--placeholder);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
+  font-size: 26px;
   font-weight: 600;
-  color: #8e8e8e;
+  color: var(--muted);
   flex-shrink: 0;
 }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.profile-info { display: flex; flex-direction: column; gap: 0.25rem; }
-.profile-handle-row { display: flex; align-items: center; gap: 0.35rem; }
-.profile-handle { margin: 0; font-size: 1.3rem; font-weight: 600; line-height: 1; }
-.profile-name { margin: 0; color: #8e8e8e; font-size: 0.95rem; }
-.profile-bio { margin: 0.35rem 0 0; font-size: 0.92rem; line-height: 1.4; }
-.profile-count { margin: 0.35rem 0 0; font-size: 0.85rem; color: #8e8e8e; }
 
+.profile-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.profile-handle-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.profile-handle { margin: 0; font-size: 21px; font-weight: 650; line-height: 1.2; }
+.profile-platform-chip {
+  margin-left: 2px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-wash);
+  border-radius: 999px;
+  padding: 4px 9px;
+  line-height: 1;
+}
+.profile-name { margin: 0; color: var(--muted); font-size: 14.5px; }
+.profile-bio { margin: 6px 0 0; font-size: 14.5px; line-height: 1.5; text-wrap: pretty; }
+
+.profile-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
 .profile-newpost, .profile-edit-btn {
-  display: inline-block;
-  border-radius: 0.4rem;
-  padding: 0.55rem 1rem;
-  font-size: 0.9rem;
+  border-radius: 9px;
+  padding: 9px 16px;
+  font-size: 14px;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
+  transition: background 120ms ease;
 }
-.profile-newpost { background: #3b82f6; color: #fff; border: none; }
-.profile-newpost:hover { background: #2f6fd6; }
-.profile-edit-btn { background: none; color: #3b82f6; border: 1px solid #3b82f6; }
-.profile-edit-btn:hover { background: rgba(59, 130, 246, 0.08); }
+.profile-newpost { background: var(--accent); color: #fff; border: none; }
+.profile-newpost:hover { background: var(--accent-hover); }
+.profile-edit-btn { background: #fff; color: var(--ink-soft); border: 1px solid rgba(37, 23, 20, 0.15); }
+.profile-edit-btn:hover { background: var(--sunk); }
 
-.profile-posts { display: flex; flex-direction: column; gap: 1.25rem; align-items: center; }
-.profile-empty { color: #8e8e8e; text-align: center; }
+/* ---------- stat row (replaces the lone .profile-count) ---------- */
+
+.profile-stats {
+  display: flex;
+  gap: 28px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 22px;
+}
+.profile-stat { display: flex; flex-direction: column; gap: 2px; }
+.profile-stat-value { font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.profile-stat-label { font-size: 12.5px; color: var(--muted); }
+
+/* ---------- posts ---------- */
+
+.profile-posts { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+
+/* Photo platforms show a grid instead of a stack */
+.profile-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+.profile-grid-cell {
+  aspect-ratio: 1 / 1;
+  background: var(--placeholder);
+  overflow: hidden;
+  display: block;
+}
+.profile-grid-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.profile-empty { color: var(--muted); text-align: center; }
 
 .feed-back-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  color: #8e8e8e;
+  gap: 5px;
+  color: var(--muted);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 13.5px;
   white-space: nowrap;
 }
-.feed-back-link:hover { color: #262626; }
+.feed-back-link:hover { color: var(--ink); }

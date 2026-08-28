@@ -142,7 +142,7 @@ export function usePostInteractions(post, viewerAccountId) {
   async function loadComments() {
     const { data } = await supabase
       .from('comments')
-      .select('id, content, created_at, platform_accounts ( handle )')
+      .select('id, content, created_at, platform_accounts ( handle, avatar_url )')
       .eq('post_id', post.id)
       .order('created_at');
     setComments(data ?? []);

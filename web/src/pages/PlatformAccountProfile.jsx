@@ -16,7 +16,9 @@ export default function PlatformAccountProfile() {
     async function fetchAccount() {
       const { data, error } = await supabase
         .from('platform_accounts')
-        .select('id, handle, display_name, avatar_url, bio, verified, world_id, character_id, characters ( owner_id ), platforms ( * )')
+        .select(
+          'id, handle, display_name, avatar_url, bio, verified, world_id, character_id, characters ( owner_id, display_name ), platforms ( * ), worlds ( name )'
+        )
         .eq('id', accountId)
         .single();
 

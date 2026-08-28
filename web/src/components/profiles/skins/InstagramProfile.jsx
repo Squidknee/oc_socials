@@ -20,7 +20,7 @@ export default function InstagramProfile({ account, isOwner, onAccountUpdated })
   // real user's OWN Instagram account in this world, whoever's profile
   // they're currently looking at, so they can like/comment as themselves.
   const [viewerAccountId, setViewerAccountId] = useState(null);
-  const { following, toggleFollow, busy: followBusy } = useFollow({
+  const { following, toggleFollow, busy: followBusy, followerCount, followingCount } = useFollow({
     followedAccountId: account.id,
     viewerAccountId,
     worldId: account.world_id,
@@ -45,9 +45,14 @@ export default function InstagramProfile({ account, isOwner, onAccountUpdated })
 
   return (
     <div className="profile-page">
+      <Link className="profile-crumb" to={`/characters/${account.character_id}`}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        {account.characters?.display_name}{account.worlds?.name ? ` · ${account.worlds.name}` : ''}
+      </Link>
+
       <div className="profile-tabs">
         <span className="profile-tab active">Profile</span>
-        <Link className="profile-tab" to={`/worlds/${account.world_id}/platforms/instagram`}>Feed</Link>
+        <Link className="profile-tab" to={`/worlds/${account.world_id}/platforms/instagram`}>World feed</Link>
       </div>
 
       <div className="profile-header">
@@ -63,10 +68,10 @@ export default function InstagramProfile({ account, isOwner, onAccountUpdated })
             <div className="profile-handle-row">
               <h1 className="profile-handle">{account.handle}</h1>
               {account.verified && <VerifiedBadge size={17} />}
+              <span className="profile-platform-chip">{account.platforms?.name}</span>
             </div>
             <p className="profile-name">{account.display_name}</p>
             {account.bio && <p className="profile-bio">{account.bio}</p>}
-            <p className="profile-count">{posts.length} post{posts.length === 1 ? '' : 's'}</p>
           </div>
         </div>
 
@@ -108,6 +113,21 @@ export default function InstagramProfile({ account, isOwner, onAccountUpdated })
           onCancel={() => setComposerOpen(false)}
         />
       )}
+
+      <div className="profile-stats">
+        <div className="profile-stat">
+          <span className="profile-stat-value">{posts.length}</span>
+          <span className="profile-stat-label">posts</span>
+        </div>
+        <div className="profile-stat">
+          <span className="profile-stat-value">{followerCount}</span>
+          <span className="profile-stat-label">followers</span>
+        </div>
+        <div className="profile-stat">
+          <span className="profile-stat-value">{followingCount}</span>
+          <span className="profile-stat-label">following</span>
+        </div>
+      </div>
 
       <div className="profile-posts">
         {loading ? (

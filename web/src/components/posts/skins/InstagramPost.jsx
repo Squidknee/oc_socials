@@ -65,6 +65,7 @@ export default function InstagramPost({ post, viewerAccountId }) {
           </span>
           <span className="ig-post-time">{formatRelativeTime(post.created_at)}</span>
         </div>
+        <span className="ig-platform-chip">{account?.platforms?.name}</span>
       </header>
 
       {current && (
@@ -82,6 +83,7 @@ export default function InstagramPost({ post, viewerAccountId }) {
               <button className="ig-carousel-nav next" type="button" onClick={() => setMediaIndex((i) => (i + 1) % media.length)} aria-label="Next">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
+              <span className="ig-carousel-counter">{mediaIndex + 1}/{media.length}</span>
               <div className="ig-carousel-dots">
                 {media.map((_, i) => (
                   <span key={i} className={`ig-carousel-dot${i === mediaIndex ? ' active' : ''}`} />
@@ -93,18 +95,20 @@ export default function InstagramPost({ post, viewerAccountId }) {
       )}
 
       <div className="ig-post-actions">
-        <button className="ig-action-btn" type="button" onClick={toggleLike} disabled={!viewerAccountId || likeBusy} title={viewerAccountId ? undefined : 'Pick a character to act as first'}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill={viewerHasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={viewerHasLiked ? 'ig-heart-filled' : ''}>
+        <button className={`ig-action-btn${viewerHasLiked ? ' is-liked' : ''}`} type="button" onClick={toggleLike} disabled={!viewerAccountId || likeBusy} title={viewerAccountId ? undefined : 'Pick a character to act as first'}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill={viewerHasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 20s-7.2-4.4-9.5-9A5.4 5.4 0 0 1 12 6.2 5.4 5.4 0 0 1 21.5 11c-2.3 4.6-9.5 9-9.5 9z" />
           </svg>
+          {displayedLikeCount}
         </button>
         <button className="ig-action-btn" type="button" onClick={toggleComments}>
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16v11H8l-4 4V5z" /></svg>
+          {commentCount}
         </button>
         <button className="ig-action-btn" type="button" disabled title="Not functional yet">
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
         </button>
-        <button className="ig-action-btn" type="button" disabled title="Not functional yet">
+        <button className="ig-action-btn share" type="button" disabled title="Not functional yet">
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" /></svg>
         </button>
       </div>
@@ -129,7 +133,16 @@ export default function InstagramPost({ post, viewerAccountId }) {
         <div className="ig-post-comments">
           {comments.map((c) => (
             <p className="ig-post-comment" key={c.id}>
-              <strong>{c.platform_accounts?.handle}</strong> {c.content}
+              <span className="ig-comment-avatar">
+                {c.platform_accounts?.avatar_url ? (
+                  <img src={c.platform_accounts.avatar_url} alt="" />
+                ) : (
+                  c.platform_accounts?.handle?.[0]?.toUpperCase()
+                )}
+              </span>
+              <span>
+                <strong>{c.platform_accounts?.handle}</strong> {c.content}
+              </span>
             </p>
           ))}
           <form className="ig-comment-form" onSubmit={handleAddComment}>
