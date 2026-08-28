@@ -7,7 +7,7 @@ import { supabase } from './supabaseClient.js';
 export async function fetchConversationSummaries({ characterId, platformId }) {
   const { data: participantRows } = await supabase
     .from('conversation_participants')
-    .select('conversation_id, pinned, last_read_at, conversations!inner ( id, kind, name, platform_id )')
+    .select('conversation_id, pinned, last_read_at, conversations!inner ( id, kind, name, avatar_url, platform_id )')
     .eq('character_id', characterId)
     .eq('conversations.platform_id', platformId);
 
@@ -41,6 +41,7 @@ export async function fetchConversationSummaries({ characterId, platformId }) {
       id: conv.id,
       kind: conv.kind,
       name: conv.name,
+      avatarUrl: conv.avatar_url,
       pinned: row.pinned,
       otherParticipants: others,
       lastMessage,

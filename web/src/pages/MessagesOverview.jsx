@@ -30,6 +30,7 @@ export default function MessagesOverview() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [otherCharacters, setOtherCharacters] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [groupName, setGroupName] = useState('');
   const [starting, setStarting] = useState(false);
 
   useEffect(() => {
@@ -125,6 +126,7 @@ export default function MessagesOverview() {
         world_id: character.world_id,
         platform_id: platform.id,
         kind: selectedIds.length === 1 ? 'direct' : 'group',
+        name: selectedIds.length > 1 ? groupName.trim() || null : null,
         created_by: user.id,
       })
       .select()
@@ -142,6 +144,7 @@ export default function MessagesOverview() {
     ]);
 
     setStarting(false);
+    setGroupName('');
     navigate(`/characters/${characterId}/messages/${platformSlug}/${convo.id}`);
   }
 
@@ -171,15 +174,15 @@ export default function MessagesOverview() {
                 <div className="msg-pinned-bubble">{conversation.lastMessage.content || 'Sent an image'}</div>
               )}
               <Link to={`/characters/${characterId}/messages/${platformSlug}/${conversation.id}`} className="msg-pinned-avatar" style={{ textDecoration: 'none' }}>
-                {conversation.otherParticipants[0]?.avatar_url ? (
-                  <img src={conversation.otherParticipants[0].avatar_url} alt="" />
+                {conversation.avatarUrl || conversation.otherParticipants[0]?.avatar_url ? (
+                  <img src={conversation.avatarUrl ?? conversation.otherParticipants[0].avatar_url} alt="" />
                 ) : (
                   otherPartyLabel(conversation)[0]?.toUpperCase()
                 )}
               </Link>
               <div className="msg-pinned-name-row">
                 <span className="msg-pinned-name">{otherPartyLabel(conversation)}</span>
-                {conversation.unreadCount > 0 && <span className="msg-unread-dot" />}
+                <span className={`msg-unread-dot${conversation.unreadCount > 0 ? '' : ' is-hidden'}`} />
               </div>
               <button type="button" onClick={() => togglePinned(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', fontSize: '0.7rem', cursor: 'pointer' }}>
                 Unpin
@@ -194,10 +197,10 @@ export default function MessagesOverview() {
         {unpinned.map((conversation) => (
           <div className="msg-list-item" key={conversation.id}>
             <Link to={`/characters/${characterId}/messages/${platformSlug}/${conversation.id}`} className="msg-list-avatar-wrap" style={{ textDecoration: 'none', color: 'inherit', flexGrow: 1, display: 'flex' }}>
-              {conversation.unreadCount > 0 && <span className="msg-unread-dot" />}
+              <span className={`msg-unread-dot${conversation.unreadCount > 0 ? '' : ' is-hidden'}`} />
               <div className="msg-list-avatar">
-                {conversation.otherParticipants[0]?.avatar_url ? (
-                  <img src={conversation.otherParticipants[0].avatar_url} alt="" />
+                {conversation.avatarUrl || conversation.otherParticipants[0]?.avatar_url ? (
+                  <img src={conversation.avatarUrl ?? conversation.otherParticipants[0].avatar_url} alt="" />
                 ) : (
                   otherPartyLabel(conversation)[0]?.toUpperCase()
                 )}
@@ -231,11 +234,19 @@ export default function MessagesOverview() {
               {c.display_name} (@{c.handle})
             </label>
           ))}
+          {selectedIds.length > 1 && (
+            <input
+              type="text"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder="Name this group (optional)"
+            />
+          )}
           <div className="msg-picker-actions">
             <button className="msg-picker-start" type="button" onClick={handleStartConversation} disabled={selectedIds.length === 0 || starting}>
               {starting ? 'Starting…' : 'Start'}
             </button>
-            <button className="msg-picker-cancel" type="button" onClick={() => { setPickerOpen(false); setSelectedIds([]); }}>
+            <button className="msg-picker-cancel" type="button" onClick={() => { setPickerOpen(false); setSelectedIds([]); setGroupName(''); }}>
               Cancel
             </button>
           </div>

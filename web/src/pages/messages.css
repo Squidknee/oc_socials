@@ -93,6 +93,10 @@
   background: #0b84fe;
   flex-shrink: 0;
 }
+/* Always takes up its slot in the row, even when there's nothing to show —
+   keeping it in the layout (vs. not rendering it at all) is what stops
+   read/unread rows from shifting the avatar and name over by 9px. */
+.msg-unread-dot.is-hidden { visibility: hidden; }
 
 /* Unpinned list */
 .msg-list { display: flex; flex-direction: column; flex-grow: 1; overflow-y: auto; }

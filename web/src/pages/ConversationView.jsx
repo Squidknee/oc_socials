@@ -5,6 +5,7 @@ import { useAuth } from '../lib/AuthContext.jsx';
 import { usePlatforms } from '../lib/PlatformsContext.jsx';
 import { clusterMessages, fetchConversationSummaries, formatMessageTime } from '../lib/messaging.js';
 import UploadButton from '../components/UploadButton.jsx';
+import EditGroupForm from '../components/EditGroupForm.jsx';
 import './messages.css';
 
 export default function ConversationView() {
@@ -19,6 +20,7 @@ export default function ConversationView() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [otherUnreadCount, setOtherUnreadCount] = useState(0);
+  const [editGroupOpen, setEditGroupOpen] = useState(false);
 
   const [draft, setDraft] = useState('');
   const [pendingImageUrl, setPendingImageUrl] = useState(null);
@@ -40,7 +42,7 @@ export default function ConversationView() {
       }
 
       const [{ data: conversationRow }, { data: participantRows }, { data: messageRows }] = await Promise.all([
-        supabase.from('conversations').select('id, kind, name').eq('id', conversationId).single(),
+        supabase.from('conversations').select('id, kind, name, avatar_url').eq('id', conversationId).single(),
         supabase
           .from('conversation_participants')
           .select('character_id, characters ( id, handle, display_name, avatar_url )')
@@ -170,7 +172,9 @@ export default function ConversationView() {
         </Link>
         <div className="msg-convo-title">
           <div className="msg-convo-avatar">
-            {conversation.kind === 'direct' && otherParticipants[0]?.avatar_url ? (
+            {conversation.kind === 'group' && conversation.avatar_url ? (
+              <img src={conversation.avatar_url} alt="" />
+            ) : conversation.kind === 'direct' && otherParticipants[0]?.avatar_url ? (
               <img src={otherParticipants[0].avatar_url} alt="" />
             ) : (
               title?.[0]?.toUpperCase()
@@ -178,8 +182,22 @@ export default function ConversationView() {
           </div>
           <span className="msg-convo-name">{title}</span>
         </div>
-        <div style={{ width: 40 }} />
+        {conversation.kind === 'group' ? (
+          <button className="msg-back-btn" type="button" onClick={() => setEditGroupOpen((v) => !v)}>
+            {editGroupOpen ? 'Cancel' : 'Edit'}
+          </button>
+        ) : (
+          <div style={{ width: 40 }} />
+        )}
       </div>
+
+      {editGroupOpen && (
+        <EditGroupForm
+          conversation={conversation}
+          onSaved={(updated) => { setConversation((prev) => ({ ...prev, ...updated })); setEditGroupOpen(false); }}
+          onCancel={() => setEditGroupOpen(false)}
+        />
+      )}
 
       <div className="msg-bubbles">
         {clusters.map((cluster, i) => {
