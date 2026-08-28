@@ -3,14 +3,16 @@
    recreation of any one app's actual chrome/typography/icons. */
 
 .msg-page {
-  max-width: 480px;
+  width: 480px;
+  max-width: 100%;
   margin: 0 auto;
-  min-height: calc(100vh - 64px);
+  height: calc(100vh - 64px);
   display: flex;
   flex-direction: column;
   font-family: system-ui, sans-serif;
   color: #1c1c1e;
   background: #fff;
+  overflow: hidden;
 }
 
 .msg-heading {
@@ -82,7 +84,7 @@
 }
 
 /* Unpinned list */
-.msg-list { display: flex; flex-direction: column; flex-grow: 1; }
+.msg-list { display: flex; flex-direction: column; flex-grow: 1; overflow-y: auto; }
 .msg-list-item {
   display: flex;
   align-items: center;

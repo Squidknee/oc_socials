@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { downloadCharacterFile } from '../lib/characterFile.js';
+import { monogram } from '../lib/names.js';
 import CopyCharacterForm from './CopyCharacterForm.jsx';
 import ImportCharacterForm from './ImportCharacterForm.jsx';
 import EditCharacterForm from './EditCharacterForm.jsx';
@@ -56,7 +57,7 @@ export default function CharacterManager({ worldId }) {
 
     setDeletingId(character.id);
 
-    // characters_delete_owner RLS is the real enforcement; platform
+    // characters_delete_owner RLS is the real enforcement here; platform
     // accounts/posts/comments/likes all cascade-delete from here.
     const { error } = await supabase.from('characters').delete().eq('id', character.id);
 
@@ -74,40 +75,75 @@ export default function CharacterManager({ worldId }) {
   if (loading) return <p>Loading characters…</p>;
 
   return (
-    <div style={{ border: '1px solid #ddd', padding: '1rem', marginBottom: '1rem' }}>
-      <h2>Your Characters in This World</h2>
+    <div className="hub-panel">
+      <div className="hub-panel-head">
+        <span className="hub-panel-title">Your Characters</span>
+        <span className="hub-panel-note">{characters.length} in this world</span>
+      </div>
 
-      {characters.length === 0 && <p>You don't have a character here yet.</p>}
+      {characters.length === 0 && (
+        <div className="char-row"><span className="char-meta">You don't have a character here yet.</span></div>
+      )}
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {characters.map((character) => (
-          <li key={character.id} style={{ borderBottom: '1px solid #eee', padding: '0.5rem 0' }}>
-            <Link to={`/characters/${character.id}`}>
-              <strong>{character.display_name}</strong>
-            </Link>{' '}
-            <span>@{character.handle}</span>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
-              <button onClick={() => setEditingId(editingId === character.id ? null : character.id)}>
-                {editingId === character.id ? 'Cancel' : 'Edit'}
-              </button>
-              <button onClick={() => downloadCharacterFile(character)}>Export</button>
+      {characters.map((character) => (
+        <Fragment key={character.id}>
+          <div className="char-row">
+            <span className="char-avatar">
+              {character.avatar_url ? (
+                <img src={character.avatar_url} alt="" onError={(e) => { e.target.style.display = 'none'; }} />
+              ) : (
+                monogram(character.display_name)
+              )}
+            </span>
+            <div className="char-info">
+              <Link className="char-name" to={`/characters/${character.id}`}>{character.display_name}</Link>
+              <span className="char-meta">@{character.handle}</span>
+            </div>
+            <div className="char-actions">
               <button
+                className="char-icon-btn"
+                type="button"
+                aria-label="Edit"
+                title="Edit"
+                onClick={() => setEditingId(editingId === character.id ? null : character.id)}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h4L20 8l-4-4L4 16z" /></svg>
+              </button>
+              <button
+                className="char-icon-btn"
+                type="button"
+                aria-label="Export"
+                title="Export"
+                onClick={() => downloadCharacterFile(character)}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12" /><path d="M7 10l5 5 5-5" /><path d="M5 21h14" /></svg>
+              </button>
+              <button
+                className="char-icon-btn"
+                type="button"
+                aria-label="Copy to another world"
+                title="Copy to another world"
                 onClick={() => setCopyingId(copyingId === character.id ? null : character.id)}
               >
-                {copyingId === character.id ? 'Cancel' : 'Copy to Another World'}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
               </button>
               <button
+                className="char-icon-btn is-danger"
+                type="button"
+                aria-label="Delete"
+                title="Delete"
                 onClick={() => handleDelete(character)}
                 disabled={deletingId === character.id}
-                style={{ color: 'crimson' }}
               >
-                {deletingId === character.id ? 'Deleting…' : 'Delete'}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16" /><path d="M9 7V5h6v2" /><path d="M6 7l1 13h10l1-13" /></svg>
               </button>
             </div>
+          </div>
 
-            {/* Only the character currently being edited/copied gets its
-                form rendered — comparing the id in state to this row's. */}
-            {editingId === character.id && (
+          {/* Only the character currently being edited/copied gets its
+              form rendered — comparing the id in state to this row's. */}
+          {editingId === character.id && (
+            <div className="char-row-form">
               <EditCharacterForm
                 character={character}
                 onSaved={(updated) => {
@@ -116,9 +152,11 @@ export default function CharacterManager({ worldId }) {
                 }}
                 onCancel={() => setEditingId(null)}
               />
-            )}
+            </div>
+          )}
 
-            {copyingId === character.id && (
+          {copyingId === character.id && (
+            <div className="char-row-form">
               <CopyCharacterForm
                 character={character}
                 onCopied={() => {
@@ -127,27 +165,29 @@ export default function CharacterManager({ worldId }) {
                 }}
                 onCancel={() => setCopyingId(null)}
               />
-            )}
-          </li>
-        ))}
-      </ul>
+            </div>
+          )}
+        </Fragment>
+      ))}
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-        <Link to={`/worlds/${worldId}/characters/new`}>+ New Character</Link>
-        <button onClick={() => setShowImportForm((v) => !v)}>
-          {showImportForm ? 'Cancel' : 'Import Character from File'}
+      <div className="hub-panel-footer">
+        <Link className="hub-btn" to={`/worlds/${worldId}/characters/new`}>+ New Character</Link>
+        <button className="hub-btn-quiet" type="button" onClick={() => setShowImportForm((v) => !v)}>
+          {showImportForm ? 'Cancel' : 'Import from file'}
         </button>
       </div>
 
       {showImportForm && (
-        <ImportCharacterForm
-          worldId={worldId}
-          onImported={() => {
-            setShowImportForm(false);
-            fetchCharacters();
-          }}
-          onCancel={() => setShowImportForm(false)}
-        />
+        <div className="char-row-form">
+          <ImportCharacterForm
+            worldId={worldId}
+            onImported={() => {
+              setShowImportForm(false);
+              fetchCharacters();
+            }}
+            onCancel={() => setShowImportForm(false)}
+          />
+        </div>
       )}
     </div>
   );

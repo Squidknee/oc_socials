@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
+import { monogram } from '../lib/names.js';
+import './worlds.css';
 
 // Lists worlds the logged-in user is a member of.
 export default function WorldSelector() {
@@ -13,24 +15,29 @@ export default function WorldSelector() {
   // just that one button and show "Deleting…" without touching the others.
   const [deletingId, setDeletingId] = useState(null);
 
-  const [showJoinForm, setShowJoinForm] = useState(false);
-  const [inviteCode, setInviteCode] = useState('');
+  const [code, setCode] = useState('');
   const [joinError, setJoinError] = useState(null);
-  const [joining, setJoining] = useState(false);
+  const [redeeming, setRedeeming] = useState(false);
 
   async function fetchWorlds() {
     setLoading(true);
-    // owner_id is now included — we need it client-side to decide whether
-    // to show the delete button for each world.
-    const { data, error } = await supabase
-      .from('worlds')
-      .select('id, name, description, owner_id');
+    // owner_id is needed client-side to decide whether to show the delete
+    // button for each world. world_stats (0019) is a separate query, not
+    // a PostgREST embed — it's a view with no real foreign key back to
+    // worlds for PostgREST to auto-detect, so merge the two client-side.
+    const [{ data: worldRows, error }, { data: statsRows }] = await Promise.all([
+      supabase.from('worlds').select('id, name, description, owner_id'),
+      supabase.from('world_stats').select('world_id, character_count, member_count, post_count'),
+    ]);
 
     if (error) {
       console.error('Error fetching worlds:', error);
-    } else {
-      setWorlds(data ?? []);
+      setLoading(false);
+      return;
     }
+
+    const statsByWorld = new Map((statsRows ?? []).map((s) => [s.world_id, s]));
+    setWorlds(worldRows.map((w) => ({ ...w, ...statsByWorld.get(w.id) })));
     setLoading(false);
   }
 
@@ -71,16 +78,16 @@ export default function WorldSelector() {
   async function handleRedeem(e) {
     e.preventDefault();
     setJoinError(null);
-    setJoining(true);
+    setRedeeming(true);
 
     // The actual join happens inside redeem_invite (a security definer
     // function) — it validates the code, adds this user as a member, and
     // bumps the invite's use count, all atomically. See 0012_redeem_invite.sql.
     const { data: worldId, error } = await supabase.rpc('redeem_invite', {
-      _code: inviteCode.trim().toLowerCase(),
+      _code: code.trim().toLowerCase(),
     });
 
-    setJoining(false);
+    setRedeeming(false);
 
     if (error) {
       setJoinError(error.message);
@@ -90,65 +97,87 @@ export default function WorldSelector() {
     navigate(`/worlds/${worldId}`);
   }
 
-  if (loading) return <p>Loading worlds…</p>;
+  if (loading) return <p style={{ padding: '1rem' }}>Loading worlds…</p>;
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <h1>Your Worlds</h1>
-      {worlds.length === 0 && <p>You haven't joined any worlds yet.</p>}
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {worlds.map((world) => (
-          <li
-            key={world.id}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.25rem 0' }}
-          >
-            <Link to={`/worlds/${world.id}`}>{world.name}</Link>
-            {/* Only render the delete button when this world's owner_id
-                matches the logged-in user's id — plain JS comparison,
-                nothing React-specific about the check itself. */}
-            {world.owner_id === user.id && (
-              <button
-                onClick={() => handleDelete(world)}
-                disabled={deletingId === world.id}
-                style={{ color: 'crimson' }}
-              >
-                {deletingId === world.id ? 'Deleting…' : 'Delete'}
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <Link className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }} to="/worlds/new">
+    <div className="worlds-page">
+      <div className="worlds-head">
+        <div className="worlds-headings">
+          <h1 className="worlds-title">Your Worlds</h1>
+          <p className="worlds-sub">
+            {worlds.length === 0
+              ? "You haven't joined any worlds yet."
+              : `${worlds.length} invite-only ${worlds.length === 1 ? 'world' : 'worlds'}. Pick one to step into.`}
+          </p>
+        </div>
+        <Link className="btn-primary" style={{ textDecoration: 'none' }} to="/worlds/new">
           + Create a World
         </Link>
-        <button type="button" onClick={() => setShowJoinForm((v) => !v)}>
-          {showJoinForm ? 'Cancel' : 'Join with Invite Code'}
-        </button>
       </div>
 
-      {showJoinForm && (
-        <form
-          onSubmit={handleRedeem}
-          style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', border: '1px solid #ddd', padding: '0.75rem', marginTop: '0.75rem', maxWidth: 320 }}
-        >
-          <label>
-            Invite code
-            <input
-              type="text"
-              value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value)}
-              required
-              style={{ display: 'block', width: '100%' }}
-            />
-          </label>
-          {joinError && <p style={{ color: 'crimson' }}>{joinError}</p>}
-          <button type="submit" disabled={joining || !inviteCode.trim()}>
-            {joining ? 'Joining…' : 'Join World'}
-          </button>
-        </form>
-      )}
+      <form className="worlds-redeem" onSubmit={handleRedeem}>
+        <span className="worlds-redeem-label">Got an invite?</span>
+        <input
+          type="text"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="Paste a code — 7QK4-M2ZD"
+        />
+        <button type="submit" disabled={!code.trim() || redeeming}>
+          {redeeming ? 'Joining…' : 'Join'}
+        </button>
+      </form>
+      {joinError && <p style={{ color: 'crimson', margin: 0 }}>{joinError}</p>}
+
+      <div className="worlds-grid">
+        {worlds.map((world) => (
+          <Link className="world-card" to={`/worlds/${world.id}`} key={world.id}>
+            <div className="world-card-top">
+              <span className="world-mono">{monogram(world.name)}</span>
+              <span className="world-card-identity">
+                <span className="world-name">{world.name}</span>
+                <span className={`world-role${world.owner_id === user.id ? '' : ' is-member'}`}>
+                  {world.owner_id === user.id ? 'Owner' : 'Member'}
+                </span>
+              </span>
+              {world.owner_id === user.id && (
+                <button
+                  type="button"
+                  className="world-delete"
+                  aria-label={`Delete ${world.name}`}
+                  title="Delete world"
+                  disabled={deletingId === world.id}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(world); }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 7h16" /><path d="M9 7V5h6v2" /><path d="M6 7l1 13h10l1-13" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {world.description && <p className="world-card-desc">{world.description}</p>}
+
+            <div className="world-card-meta">
+              <span>{world.character_count ?? 0} characters</span>
+              <span className="meta-dot" />
+              <span>{world.member_count ?? 0} members</span>
+              <span className="meta-dot" />
+              <span>{world.post_count ?? 0} posts</span>
+            </div>
+          </Link>
+        ))}
+
+        <Link className="world-card-new" to="/worlds/new">
+          <span className="world-card-new-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14" /><path d="M5 12h14" />
+            </svg>
+          </span>
+          <span className="world-card-new-title">Create a World</span>
+          <span className="world-card-new-sub">Set a scene, get a code to share.</span>
+        </Link>
+      </div>
     </div>
   );
 }

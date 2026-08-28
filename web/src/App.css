@@ -82,6 +82,7 @@ body {
 
 .application-nav {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   padding: 1rem;
   background-color: var(--color-nav);
@@ -91,12 +92,17 @@ body {
 }
 
 .application-nav-link {
+  display: inline-flex;
+  align-items: center;
   color: var(--color-nav-text);
   text-decoration: none;
   font-family: Balthazar, serif;
   background: none;
   border: none;
+  padding: 0;
+  margin: 0;
   font-size: 1rem;
+  line-height: 1;
   cursor: pointer;
 }
 
