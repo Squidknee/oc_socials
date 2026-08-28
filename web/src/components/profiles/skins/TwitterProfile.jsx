@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../../../lib/supabaseClient.js';
 import { useAuth } from '../../../lib/AuthContext.jsx';
 import { fetchViewerAccountId } from '../../../lib/platformAccounts.js';
+import { POST_SELECT } from '../../../lib/posts.js';
 import Post from '../../posts/Post.jsx';
 import PostComposer from '../../composer/PostComposer.jsx';
 import VerifiedBadge from '../../VerifiedBadge.jsx';
@@ -26,9 +27,7 @@ export default function TwitterProfile({ account, isOwner, onAccountUpdated }) {
   async function fetchPosts() {
     const { data } = await supabase
       .from('posts')
-      .select(
-        'id, content, created_at, base_like_count, retweet_count, client_label, media_url, media_kind, platform_accounts ( id, handle, display_name, avatar_url, verified, platforms ( slug, name ) )'
-      )
+      .select(POST_SELECT)
       .eq('platform_account_id', account.id)
       .order('created_at', { ascending: false });
     setPosts(data ?? []);

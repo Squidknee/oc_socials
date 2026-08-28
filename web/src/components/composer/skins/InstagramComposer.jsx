@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient.js';
 import UploadButton from '../../UploadButton.jsx';
 import '../composer.css';
@@ -8,16 +8,42 @@ function toDatetimeLocal(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export default function InstagramComposer({ account, onPosted, onCancel }) {
+// post is optional — when given, every field seeds from it and submit
+// updates that row instead of inserting a new one.
+export default function InstagramComposer({ account, post, onPosted, onCancel }) {
   const platform = account.platforms;
+  const editing = !!post;
 
-  const [mediaItems, setMediaItems] = useState([{ url: '', kind: 'image' }]);
-  const [caption, setCaption] = useState('');
-  const [baseLikeCount, setBaseLikeCount] = useState(0);
-  const [postedAt, setPostedAt] = useState(() => toDatetimeLocal(new Date()));
+  const [mediaItems, setMediaItems] = useState(() =>
+    post
+      ? [...(post.media_url ? [{ url: post.media_url, kind: post.media_kind ?? 'image' }] : [])]
+      : [{ url: '', kind: 'image' }]
+  );
+  const [caption, setCaption] = useState(post?.content ?? '');
+  const [baseLikeCount, setBaseLikeCount] = useState(post?.base_like_count ?? 0);
+  const [postedAt, setPostedAt] = useState(() => toDatetimeLocal(post ? new Date(post.created_at) : new Date()));
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // A post's own cover (media_url/media_kind) is already on the row, but
+  // any additional carousel items live in post_media — usePostInteractions
+  // fetches those for display, but this composer instance doesn't have
+  // access to that, so it loads its own copy just for editing.
+  useEffect(() => {
+    if (!post) return;
+    async function fetchExtraMedia() {
+      const { data } = await supabase
+        .from('post_media')
+        .select('media_url, kind, position')
+        .eq('post_id', post.id)
+        .order('position');
+      if (data?.length) {
+        setMediaItems((items) => [...items, ...data.map((m) => ({ url: m.media_url, kind: m.kind }))]);
+      }
+    }
+    fetchExtraMedia();
+  }, [post]);
 
   function updateMediaItem(index, patch) {
     setMediaItems((items) => items.map((item, i) => (i === index ? { ...item, ...patch } : item)));
@@ -44,20 +70,21 @@ export default function InstagramComposer({ account, onPosted, onCancel }) {
 
     setSubmitting(true);
 
-    const { data: post, error: postError } = await supabase
-      .from('posts')
-      .insert({
-        platform_account_id: account.id,
-        platform_id: platform.id,
-        world_id: account.world_id,
-        content: caption || null,
-        media_url: filledMedia[0]?.url || null,
-        media_kind: filledMedia[0]?.kind || null,
-        base_like_count: Number(baseLikeCount) || 0,
-        created_at: new Date(postedAt).toISOString(),
-      })
-      .select()
-      .single();
+    const fields = {
+      content: caption || null,
+      media_url: filledMedia[0]?.url || null,
+      media_kind: filledMedia[0]?.kind || null,
+      base_like_count: Number(baseLikeCount) || 0,
+      created_at: new Date(postedAt).toISOString(),
+    };
+
+    const { data: savedPost, error: postError } = editing
+      ? await supabase.from('posts').update(fields).eq('id', post.id).select().single()
+      : await supabase
+          .from('posts')
+          .insert({ ...fields, platform_account_id: account.id, platform_id: platform.id, world_id: account.world_id })
+          .select()
+          .single();
 
     if (postError) {
       setSubmitting(false);
@@ -65,10 +92,17 @@ export default function InstagramComposer({ account, onPosted, onCancel }) {
       return;
     }
 
+    // Editing replaces post_media wholesale rather than diffing it —
+    // simplest correct behavior for a carousel whose length can change.
+    if (editing) {
+      const { error: deleteError } = await supabase.from('post_media').delete().eq('post_id', savedPost.id);
+      if (deleteError) console.error('Error clearing old media:', deleteError);
+    }
+
     if (filledMedia.length > 1) {
       const { error: mediaError } = await supabase.from('post_media').insert(
         filledMedia.slice(1).map((m, i) => ({
-          post_id: post.id,
+          post_id: savedPost.id,
           media_url: m.url,
           kind: m.kind,
           position: i + 1,
@@ -78,7 +112,7 @@ export default function InstagramComposer({ account, onPosted, onCancel }) {
     }
 
     setSubmitting(false);
-    onPosted?.(post);
+    onPosted?.(savedPost);
   }
 
   return (
@@ -189,7 +223,7 @@ export default function InstagramComposer({ account, onPosted, onCancel }) {
       <div className="composer-actions">
         <button type="button" className="composer-cancel" onClick={onCancel}>Cancel</button>
         <button type="submit" className="composer-submit" disabled={submitting}>
-          {submitting ? 'Sharing…' : 'Share'}
+          {editing ? (submitting ? 'Saving…' : 'Save') : (submitting ? 'Sharing…' : 'Share')}
         </button>
       </div>
     </form>

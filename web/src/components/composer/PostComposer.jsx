@@ -9,7 +9,10 @@ const SKINS = {
   twitter: TwitterComposer,
 };
 
-export default function PostComposer({ account, onPosted, onCancel }) {
+// post is optional — when given, the skin renders in edit mode: fields
+// seed from the existing post and submit updates it instead of creating
+// a new one.
+export default function PostComposer({ account, post, onPosted, onCancel }) {
   const slug = account.platforms?.slug;
   const Skin = SKINS[slug];
 
@@ -18,5 +21,5 @@ export default function PostComposer({ account, onPosted, onCancel }) {
     return null;
   }
 
-  return <Skin account={account} onPosted={onPosted} onCancel={onCancel} />;
+  return <Skin account={account} post={post} onPosted={onPosted} onCancel={onCancel} />;
 }

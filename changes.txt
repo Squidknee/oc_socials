@@ -3,5 +3,8 @@ how hard would it be to add discord?
 make it an app?
 
 nav bar padding 
-back buttons 
-photo for the world logo
+
+reblog button should not be greyed out 
+
+reorder worlds by dragging -- edit layout type thing?
+reposition image

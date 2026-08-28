@@ -1,12 +1,28 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../../lib/AuthContext.jsx';
 import { formatRelativeTime } from '../../../lib/postDisplay.js';
 import { usePostInteractions } from '../usePostInteractions.js';
 import HashtagText from '../HashtagText.jsx';
 import VerifiedBadge from '../../VerifiedBadge.jsx';
+import PostComposer from '../../composer/PostComposer.jsx';
 import './twitter.css';
 
-export default function TwitterPost({ post, viewerAccountId }) {
+export default function TwitterPost({ post: postProp, viewerAccountId }) {
+  const { user } = useAuth();
+  // Local copy so a successful edit reflects immediately without needing
+  // to thread an update callback up through every page that renders a
+  // post list.
+  const [post, setPost] = useState(postProp);
+  useEffect(() => setPost(postProp), [postProp]);
+
   const account = post.platform_accounts;
+  // True ownership, not viewerAccountId — that's "which account you're
+  // acting as" for likes/comments, and can be a different character than
+  // this post's author even when you own both (no real character
+  // switcher yet).
+  const isOwnPost = account?.characters?.owner_id === user.id;
+  const [editing, setEditing] = useState(false);
 
   const {
     extraMedia, realLikeCount, viewerHasLiked, likeBusy, toggleLike,
@@ -22,6 +38,7 @@ export default function TwitterPost({ post, viewerAccountId }) {
   const displayedLikeCount = post.base_like_count + realLikeCount;
 
   return (
+    <>
     <article className="tw-post">
       <Link className="tw-post-avatar" to={`/accounts/${account?.id}`}>
         {account?.avatar_url ? (
@@ -95,6 +112,11 @@ export default function TwitterPost({ post, viewerAccountId }) {
           <button className="tw-action share" type="button" disabled title="Not functional yet">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" /></svg>
           </button>
+          {isOwnPost && (
+            <button className="tw-action" type="button" onClick={() => setEditing((v) => !v)} aria-label="Edit post" title="Edit post">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h4L20 8l-4-4L4 16z" /></svg>
+            </button>
+          )}
         </div>
 
         {commentsOpen && (
@@ -129,5 +151,18 @@ export default function TwitterPost({ post, viewerAccountId }) {
         )}
       </div>
     </article>
+
+    {editing && (
+      <PostComposer
+        account={account}
+        post={post}
+        onPosted={(updated) => {
+          setPost((prev) => ({ ...prev, ...updated }));
+          setEditing(false);
+        }}
+        onCancel={() => setEditing(false)}
+      />
+    )}
+    </>
   );
 }
