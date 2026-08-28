@@ -28,6 +28,25 @@ export default function InstagramPost({ post: postProp, viewerAccountId }) {
   const [mediaIndex, setMediaIndex] = useState(0);
   const [likedByName, setLikedByName] = useState(null);
   const [editing, setEditing] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    const confirmed = window.confirm("Delete this post? This can't be undone.");
+    if (!confirmed) return;
+
+    setDeleting(true);
+    // posts_delete_own_platform_account (0024) is the real enforcement;
+    // comments/likes/post_media all cascade-delete from here.
+    const { error } = await supabase.from('posts').delete().eq('id', post.id);
+    setDeleting(false);
+
+    if (error) {
+      alert(`Couldn't delete post: ${error.message}`);
+      return;
+    }
+    setDeleted(true);
+  }
 
   const {
     extraMedia, realLikeCount, viewerHasLiked, likeBusy, toggleLike, likeRows,
@@ -56,6 +75,10 @@ export default function InstagramPost({ post: postProp, viewerAccountId }) {
     }
     fetchLikedByFollow();
   }, [viewerAccountId, likeRows]);
+
+  // Every hook above must run every render regardless — only bail out to
+  // nothing once React's own bookkeeping for this render is done.
+  if (deleted) return null;
 
   const media = [
     ...(post.media_url ? [{ media_url: post.media_url, kind: post.media_kind ?? 'image' }] : []),
@@ -129,9 +152,14 @@ export default function InstagramPost({ post: postProp, viewerAccountId }) {
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" /></svg>
         </button>
         {isOwnPost && (
-          <button className="ig-action-btn" type="button" onClick={() => setEditing((v) => !v)} aria-label="Edit post" title="Edit post">
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h4L20 8l-4-4L4 16z" /></svg>
-          </button>
+          <>
+            <button className="ig-action-btn" type="button" onClick={() => setEditing((v) => !v)} aria-label="Edit post" title="Edit post">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h4L20 8l-4-4L4 16z" /></svg>
+            </button>
+            <button className="ig-action-btn" type="button" onClick={handleDelete} disabled={deleting} aria-label="Delete post" title="Delete post">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16" /><path d="M9 7V5h6v2" /><path d="M6 7l1 13h10l1-13" /></svg>
+            </button>
+          </>
         )}
       </div>
 
