@@ -47,7 +47,7 @@ export default function WorldFeed() {
       // with no real foreign key for PostgREST to auto-detect, so this
       // is a second query rather than a joined select.
       const [{ data }, { data: stats }] = await Promise.all([
-        supabase.from('worlds').select('id, name, description, owner_id').eq('id', worldId).single(),
+        supabase.from('worlds').select('id, name, description, avatar_url, owner_id').eq('id', worldId).single(),
         supabase.from('world_stats').select('character_count, member_count, post_count').eq('world_id', worldId).maybeSingle(),
       ]);
       setWorld(data);
@@ -161,7 +161,13 @@ export default function WorldFeed() {
 
         <div className="hub-head">
           <div className="hub-head-main">
-            <span className="hub-mono">{monogram(world?.name)}</span>
+            <span className="hub-mono">
+              {world?.avatar_url ? (
+                <img src={world.avatar_url} alt="" onError={(e) => { e.target.style.display = 'none'; }} />
+              ) : (
+                monogram(world?.name)
+              )}
+            </span>
             <div className="hub-identity">
               <h1 className="hub-title">{world?.name ?? 'World'}</h1>
               <p className="hub-sub">

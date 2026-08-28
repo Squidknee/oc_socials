@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
+import UploadButton from './UploadButton.jsx';
 
 // props are just a regular JS object passed in as this function's argument —
 // JSX components ARE functions, so "props" works exactly like any other
@@ -13,6 +14,7 @@ export default function CreateWorldForm({ onCreated }) {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   // createdWorld/inviteCode are null until a world is successfully created,
@@ -33,7 +35,7 @@ export default function CreateWorldForm({ onCreated }) {
     // rather than an array of one) so we have its generated id right away.
     const { data: world, error: worldError } = await supabase
       .from('worlds')
-      .insert({ name, description, owner_id: user.id })
+      .insert({ name, description, avatar_url: avatarUrl || null, owner_id: user.id })
       .select()
       .single();
 
@@ -77,6 +79,7 @@ export default function CreateWorldForm({ onCreated }) {
     setInviteCode(invite.code);
     setName('');
     setDescription('');
+    setAvatarUrl('');
 
     // Let the parent (WorldSelector) know a world was created, so it can
     // refresh its list. "?." is optional chaining — call onCreated only if
@@ -165,6 +168,20 @@ export default function CreateWorldForm({ onCreated }) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What's this world about? Set the scene for anyone who joins."
           />
+        </div>
+        <div className="field">
+          <label htmlFor="world-avatar">Logo (optional)</label>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input
+              id="world-avatar"
+              type="url"
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              placeholder="Image URL"
+              style={{ flexGrow: 1 }}
+            />
+            <UploadButton accept="image/*" onUploaded={(url) => setAvatarUrl(url)} onError={setError} />
+          </div>
         </div>
         {error && <p style={{ color: 'crimson' }}>{error}</p>}
         <button className="btn-primary" type="submit" disabled={submitting}>

@@ -32,7 +32,7 @@ export default function CharacterProfile() {
     async function fetchCharacter() {
       const { data, error } = await supabase
         .from('characters')
-        .select('id, handle, display_name, bio, avatar_url, owner_id')
+        .select('id, handle, display_name, bio, avatar_url, owner_id, world_id')
         .eq('id', characterId)
         .single();
 
@@ -67,6 +67,11 @@ export default function CharacterProfile() {
   return (
     <div className="page-center">
       <div style={{ width: '100%', maxWidth: 560, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+        <Link className="back-link" to={`/worlds/${character.world_id}`}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          Back to world
+        </Link>
 
         <div className="panel">
           <div className="header-top">

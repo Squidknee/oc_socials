@@ -157,6 +157,10 @@ export default function MessagesOverview() {
 
   return (
     <div className="msg-page">
+      <Link className="msg-page-back" to={`/characters/${characterId}`}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        Back to character
+      </Link>
       <h1 className="msg-heading">Messages</h1>
 
       {pinned.length > 0 && (

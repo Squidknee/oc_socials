@@ -26,7 +26,7 @@ export default function WorldSelector() {
     // a PostgREST embed — it's a view with no real foreign key back to
     // worlds for PostgREST to auto-detect, so merge the two client-side.
     const [{ data: worldRows, error }, { data: statsRows }] = await Promise.all([
-      supabase.from('worlds').select('id, name, description, owner_id'),
+      supabase.from('worlds').select('id, name, description, avatar_url, owner_id'),
       supabase.from('world_stats').select('world_id, character_count, member_count, post_count'),
     ]);
 
@@ -133,7 +133,13 @@ export default function WorldSelector() {
         {worlds.map((world) => (
           <Link className="world-card" to={`/worlds/${world.id}`} key={world.id}>
             <div className="world-card-top">
-              <span className="world-mono">{monogram(world.name)}</span>
+              <span className="world-mono">
+                {world.avatar_url ? (
+                  <img src={world.avatar_url} alt="" onError={(e) => { e.target.style.display = 'none'; }} />
+                ) : (
+                  monogram(world.name)
+                )}
+              </span>
               <span className="world-card-identity">
                 <span className="world-name">{world.name}</span>
                 <span className={`world-role${world.owner_id === user.id ? '' : ' is-member'}`}>
