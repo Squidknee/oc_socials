@@ -51,6 +51,27 @@ export default function MessagesOverview() {
     fetchCharacter();
   }, [characterId, platform?.id]);
 
+  // Live-updates the list preview/unread dots when a message lands in any
+  // of this character's conversations. Can't filter postgres_changes by
+  // "conversation_id in (my conversations)", so this subscribes to every
+  // message change and lets messages_select_participant (0014) decide
+  // what actually reaches this client — then just re-derives the
+  // summaries rather than hand-patching unread counts/previews in place.
+  useEffect(() => {
+    if (!character || !platform) return;
+
+    const channel = supabase
+      .channel(`messages-overview:${characterId}:${platform.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+        fetchConversationSummaries({ characterId, platformId: platform.id }).then(setConversations);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [character, characterId, platform?.id]);
+
   async function togglePinned(conversation) {
     if (!conversation.pinned && conversations.filter((c) => c.pinned).length >= MAX_PINNED) {
       alert(`You can only pin up to ${MAX_PINNED} conversations.`);

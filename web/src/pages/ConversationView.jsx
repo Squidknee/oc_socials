@@ -68,6 +68,35 @@ export default function ConversationView() {
     load();
   }, [characterId, conversationId, user.id]);
 
+  // Live delivery: messages_select_participant (0014) still gates what
+  // this client actually receives, so a channel scoped to just this
+  // conversation is enough — no separate realtime auth to worry about.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`messages:${conversationId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
+        (payload) => {
+          // The sender's own send already appended this optimistically —
+          // skip it here so it doesn't show up twice.
+          setMessages((prev) => (prev.some((m) => m.id === payload.new.id) ? prev : [...prev, payload.new]));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
+        (payload) => {
+          setMessages((prev) => prev.map((m) => (m.id === payload.new.id ? payload.new : m)));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId]);
+
   useEffect(() => {
     async function fetchOtherUnread() {
       if (!platform) return;
