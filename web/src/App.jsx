@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/AuthContext.jsx';
 import { PlatformsProvider } from './lib/PlatformsContext.jsx';
+import { getCurrentWorldId } from './lib/currentWorld.js';
 import RequireAuth from './components/RequireAuth.jsx';
 import './App.css';
 import Login from './pages/Login.jsx';
@@ -17,6 +18,15 @@ import ConversationView from './pages/ConversationView.jsx';
 
 function NavBar() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // No world id lives in this route, so look up the last world you
+  // visited this session — if you haven't picked one yet, send you to
+  // the world selector instead of a dead end.
+  function goToCharacters() {
+    const worldId = getCurrentWorldId();
+    navigate(worldId ? `/worlds/${worldId}` : '/');
+  }
 
   return (
     <nav className="application-nav">
@@ -30,6 +40,7 @@ function NavBar() {
       {user ? (
         <>
           <Link className="application-nav-link" to="/">Worlds</Link>
+          <button className="application-nav-link" onClick={goToCharacters}>Characters</button>
           <button onClick={signOut}>Log Out</button>
         </>
       ) : (

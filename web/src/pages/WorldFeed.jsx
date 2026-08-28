@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { fetchViewerAccountsBySlug } from '../lib/platformAccounts.js';
+import { setCurrentWorldId } from '../lib/currentWorld.js';
 import CharacterManager from '../components/CharacterManager.jsx';
 import Post from '../components/posts/Post.jsx';
 
@@ -54,6 +55,7 @@ export default function WorldFeed() {
     fetchOtherCharacters();
     fetchRecentPosts();
     fetchViewerAccountsBySlug({ worldId, userId: user.id }).then(setViewerAccountsBySlug);
+    setCurrentWorldId(worldId);
   }, [worldId, user.id]);
 
   async function handleGenerateInvite() {
