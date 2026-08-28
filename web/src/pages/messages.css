@@ -26,12 +26,26 @@
   flex-shrink: 0;
 }
 
+.msg-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  flex-shrink: 0;
+}
 .msg-heading {
-  text-align: center;
   font-size: 1.2rem;
   font-weight: 700;
-  padding: 0.5rem 0 0.5rem;
   margin: 0;
+}
+.msg-edit-toggle {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #0b84fe;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0;
 }
 
 .msg-empty { text-align: center; color: #8e8e93; padding: 2rem 1rem; }

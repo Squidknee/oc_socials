@@ -26,6 +26,7 @@ export default function MessagesOverview() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [editMode, setEditMode] = useState(false);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [otherCharacters, setOtherCharacters] = useState([]);
@@ -187,7 +188,12 @@ export default function MessagesOverview() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
         Back to character
       </Link>
-      <h1 className="msg-heading">Messages</h1>
+      <div className="msg-heading-row">
+        <h1 className="msg-heading">Messages</h1>
+        <button className="msg-edit-toggle" type="button" onClick={() => setEditMode((v) => !v)}>
+          {editMode ? 'Done' : 'Edit'}
+        </button>
+      </div>
 
       {pinned.length > 0 && (
         <div className="msg-pinned-row">
@@ -207,9 +213,16 @@ export default function MessagesOverview() {
                 <span className="msg-pinned-name">{otherPartyLabel(conversation)}</span>
                 <span className={`msg-unread-dot${conversation.unreadCount > 0 ? '' : ' is-hidden'}`} />
               </div>
-              <button type="button" onClick={() => togglePinned(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', fontSize: '0.7rem', cursor: 'pointer' }}>
-                Unpin
-              </button>
+              {editMode && (
+                <div style={{ display: 'flex', gap: '0.3rem' }}>
+                  <button type="button" onClick={() => togglePinned(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', fontSize: '0.7rem', cursor: 'pointer' }}>
+                    Unpin
+                  </button>
+                  <button type="button" onClick={() => handleDeleteConversation(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', fontSize: '0.7rem', cursor: 'pointer' }}>
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -239,12 +252,16 @@ export default function MessagesOverview() {
             </Link>
             <div className="msg-list-meta">
               {conversation.lastMessage && <span>{formatMessageTime(conversation.lastMessage.created_at)}</span>}
-              <button type="button" onClick={() => togglePinned(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', cursor: 'pointer', fontSize: '0.7rem' }}>
-                Pin
-              </button>
-              <button type="button" onClick={() => handleDeleteConversation(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', cursor: 'pointer', fontSize: '0.7rem' }}>
-                Delete
-              </button>
+              {editMode && (
+                <>
+                  <button type="button" onClick={() => togglePinned(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', cursor: 'pointer', fontSize: '0.7rem' }}>
+                    Pin
+                  </button>
+                  <button type="button" onClick={() => handleDeleteConversation(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', cursor: 'pointer', fontSize: '0.7rem' }}>
+                    Delete
+                  </button>
+                </>
+              )}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
             </div>
           </div>
