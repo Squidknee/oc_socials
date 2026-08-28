@@ -30,7 +30,7 @@ export default function TwitterPost({ post: postProp, viewerAccountId }) {
   const {
     extraMedia, realLikeCount, viewerHasLiked, likeBusy, toggleLike,
     commentCount, commentsOpen, comments, toggleComments,
-    newComment, setNewComment, postingComment, handleAddComment,
+    newComment, setNewComment, postingComment, handleAddComment, deleteComment,
   } = usePostInteractions(post, viewerAccountId);
 
   async function handleDelete() {
@@ -162,6 +162,11 @@ export default function TwitterPost({ post: postProp, viewerAccountId }) {
                 <span>
                   <strong>{c.platform_accounts?.handle}</strong> {c.content}
                 </span>
+                {c.platform_accounts?.characters?.owner_id === user.id && (
+                  <button className="tw-comment-delete" type="button" onClick={() => deleteComment(c.id)} aria-label="Delete comment" title="Delete comment">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18" /><path d="M6 6l12 12" /></svg>
+                  </button>
+                )}
               </p>
             ))}
             <form className="tw-comment-form" onSubmit={handleAddComment}>

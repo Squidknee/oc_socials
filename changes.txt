@@ -19,6 +19,8 @@ no comments yet formatting
 
 following edits - add a following list 
 
+you should not be able to follow, like, or comment, on the world overview since you arent logged in as a character
+
 download button
 
 unique world id tokens 
@@ -27,4 +29,20 @@ imessage delete will go under edit and so will pin
 
 posted via... padding
 
+comment deletion
 
+enter sends post vs shift enter which makes a new line
+
+respect enter/line breaks in bios
+
+character selector on the world screen?
+
+toggable character creator to create public characters that anyone can edit and post as vs private characters 
+
+have a section dedicated to "public characters" that you can switch into 
+
+so whats new doesnt get long, maybe make it self contained and scrollable? 
+
+also mention if you have unread messages as a character on a screen
+
+remove date from message

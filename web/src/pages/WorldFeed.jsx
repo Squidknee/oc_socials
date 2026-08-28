@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { usePlatforms } from '../lib/PlatformsContext.jsx';
-import { fetchViewerAccountsBySlug } from '../lib/platformAccounts.js';
 import { POST_SELECT, fetchPostById } from '../lib/posts.js';
 import { setCurrentWorldId } from '../lib/currentWorld.js';
 import { monogram } from '../lib/names.js';
@@ -35,7 +34,6 @@ export default function WorldFeed() {
   const [worldStats, setWorldStats] = useState(null);
   const [otherCharacters, setOtherCharacters] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
-  const [viewerAccountsBySlug, setViewerAccountsBySlug] = useState({});
   const [platformCounts, setPlatformCounts] = useState([]);
   const [invite, setInvite] = useState(null);
   const [generatingInvite, setGeneratingInvite] = useState(false);
@@ -76,7 +74,6 @@ export default function WorldFeed() {
     fetchWorld();
     fetchOtherCharacters();
     fetchRecentPosts();
-    fetchViewerAccountsBySlug({ worldId, userId: user.id }).then(setViewerAccountsBySlug);
     setCurrentWorldId(worldId);
   }, [worldId, user.id]);
 
@@ -216,13 +213,13 @@ export default function WorldFeed() {
             {recentPosts.length === 0 ? (
               <p className="hub-empty">No posts yet in this world.</p>
             ) : (
-              recentPosts.map((post) => (
-                <Post
-                  key={post.id}
-                  post={post}
-                  viewerAccountId={viewerAccountsBySlug[post.platform_accounts?.platforms?.slug] ?? null}
-                />
-              ))
+              // No viewerAccountId here on purpose — this feed mixes
+              // platforms with no single "acting as" context, and there's
+              // no character picker on this page. usePostInteractions
+              // already disables like/comment and shows "Pick a character
+              // to act as first" whenever it's null; the full-platform
+              // feed (PlatformFeedPage) still supplies its own.
+              recentPosts.map((post) => <Post key={post.id} post={post} viewerAccountId={null} />)
             )}
           </div>
         </div>

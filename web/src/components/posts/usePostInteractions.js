@@ -107,6 +107,22 @@ export function usePostInteractions(post, viewerAccountId) {
           if (commentsOpenRef.current) loadComments();
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'comments', filter: `post_id=eq.${post.id}` },
+        (payload) => {
+          // The sole place commentCount is decremented — deleteComment
+          // below relies on this same event firing for its own deletion
+          // too (RLS lets you see your own writes), rather than also
+          // decrementing itself. seenCommentIds has no record of comments
+          // loaded before this component mounted (fetchCommentCount only
+          // ever got a number, never ids), so a dedupe-by-seen check here
+          // would silently skip decrementing exactly those — simpler and
+          // correct to just always decrement once, in this one spot.
+          setCommentCount((n) => Math.max(0, n - 1));
+          setComments((prev) => prev.filter((c) => c.id !== payload.old.id));
+        }
+      )
       .subscribe();
 
     return () => {
@@ -140,12 +156,29 @@ export function usePostInteractions(post, viewerAccountId) {
   }
 
   async function loadComments() {
+    // characters ( owner_id ) is what a delete button actually gates on —
+    // same reasoning as posts' isOwnPost: viewerAccountId is "which
+    // account you're acting as," not true ownership, and this app has no
+    // real character switcher yet.
     const { data } = await supabase
       .from('comments')
-      .select('id, content, created_at, platform_accounts ( handle, avatar_url )')
+      .select('id, content, created_at, platform_accounts ( handle, avatar_url, characters ( owner_id ) )')
       .eq('post_id', post.id)
       .order('created_at');
     setComments(data ?? []);
+  }
+
+  async function deleteComment(commentId) {
+    // comments_delete_own_platform_account (0026) is the real
+    // enforcement. commentCount isn't touched here — the realtime DELETE
+    // handler above does it, since it fires for this deletion too and is
+    // the one place that avoids double-decrementing.
+    const { error } = await supabase.from('comments').delete().eq('id', commentId);
+    if (error) {
+      alert(`Couldn't delete comment: ${error.message}`);
+      return;
+    }
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
   }
 
   function toggleComments() {
@@ -194,5 +227,6 @@ export function usePostInteractions(post, viewerAccountId) {
     setNewComment,
     postingComment,
     handleAddComment,
+    deleteComment,
   };
 }

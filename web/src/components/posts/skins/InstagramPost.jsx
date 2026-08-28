@@ -51,7 +51,7 @@ export default function InstagramPost({ post: postProp, viewerAccountId }) {
   const {
     extraMedia, realLikeCount, viewerHasLiked, likeBusy, toggleLike, likeRows,
     commentCount, commentsOpen, comments, toggleComments,
-    newComment, setNewComment, postingComment, handleAddComment,
+    newComment, setNewComment, postingComment, handleAddComment, deleteComment,
   } = usePostInteractions(post, viewerAccountId);
 
   // "Liked by" prefers someone the viewer actually follows, so it reads as
@@ -193,6 +193,11 @@ export default function InstagramPost({ post: postProp, viewerAccountId }) {
               <span>
                 <strong>{c.platform_accounts?.handle}</strong> {c.content}
               </span>
+              {c.platform_accounts?.characters?.owner_id === user.id && (
+                <button className="ig-comment-delete" type="button" onClick={() => deleteComment(c.id)} aria-label="Delete comment" title="Delete comment">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18" /><path d="M6 6l12 12" /></svg>
+                </button>
+              )}
             </p>
           ))}
           <form className="ig-comment-form" onSubmit={handleAddComment}>
