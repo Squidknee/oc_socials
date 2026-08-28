@@ -88,6 +88,29 @@ export default function MessagesOverview() {
     setConversations((prev) => prev.map((c) => (c.id === conversation.id ? { ...c, pinned: !c.pinned } : c)));
   }
 
+  async function handleDeleteConversation(conversation) {
+    const confirmed = window.confirm(
+      "Delete this conversation? It disappears from your list — the other participant(s) keep their own copy. This can't be undone."
+    );
+    if (!confirmed) return;
+
+    // conversation_participants_delete_own (0025) is the real
+    // enforcement — this only removes this character's own membership
+    // row, not the conversation or its messages.
+    const { error } = await supabase
+      .from('conversation_participants')
+      .delete()
+      .eq('conversation_id', conversation.id)
+      .eq('character_id', characterId);
+
+    if (error) {
+      alert(`Couldn't delete conversation: ${error.message}`);
+      return;
+    }
+
+    setConversations((prev) => prev.filter((c) => c.id !== conversation.id));
+  }
+
   async function openPicker() {
     setPickerOpen(true);
     if (otherCharacters.length > 0) return;
@@ -218,6 +241,9 @@ export default function MessagesOverview() {
               {conversation.lastMessage && <span>{formatMessageTime(conversation.lastMessage.created_at)}</span>}
               <button type="button" onClick={() => togglePinned(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', cursor: 'pointer', fontSize: '0.7rem' }}>
                 Pin
+              </button>
+              <button type="button" onClick={() => handleDeleteConversation(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', cursor: 'pointer', fontSize: '0.7rem' }}>
+                Delete
               </button>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
             </div>

@@ -7,4 +7,19 @@ nav bar padding
 reblog button should not be greyed out 
 
 reorder worlds by dragging -- edit layout type thing?
-reposition image
+reposition and resize images when uploading 
+
+imessage blue text padding -
+
+make read toggable in settings 
+
+password reset prompt 
+
+no comments yet formatting 
+
+following edits - add a following list 
+
+download button
+
+unique world id tokens 
+
