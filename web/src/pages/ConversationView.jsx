@@ -21,6 +21,12 @@ export default function ConversationView() {
   const [loading, setLoading] = useState(true);
   const [otherUnreadCount, setOtherUnreadCount] = useState(0);
   const [editGroupOpen, setEditGroupOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  // The photo I've personally chosen to see for the other character in
+  // this DM — lives on my own conversation_participants row so it never
+  // touches their actual profile (like overriding a contact's photo in a
+  // phone's address book).
+  const [myContactPhotoUrl, setMyContactPhotoUrl] = useState(null);
 
   const [draft, setDraft] = useState('');
   const [pendingImageUrl, setPendingImageUrl] = useState(null);
@@ -42,10 +48,10 @@ export default function ConversationView() {
       }
 
       const [{ data: conversationRow }, { data: participantRows }, { data: messageRows }] = await Promise.all([
-        supabase.from('conversations').select('id, kind, name, avatar_url').eq('id', conversationId).single(),
+        supabase.from('conversations').select('id, kind, name, avatar_url, read_receipts_enabled').eq('id', conversationId).single(),
         supabase
           .from('conversation_participants')
-          .select('character_id, characters ( id, handle, display_name, avatar_url )')
+          .select('character_id, contact_photo_url, characters ( id, handle, display_name, avatar_url )')
           .eq('conversation_id', conversationId),
         supabase
           .from('messages')
@@ -56,6 +62,7 @@ export default function ConversationView() {
 
       setConversation(conversationRow);
       setParticipants((participantRows ?? []).map((r) => r.characters));
+      setMyContactPhotoUrl((participantRows ?? []).find((r) => r.character_id === characterId)?.contact_photo_url ?? null);
       setMessages(messageRows ?? []);
       setLoading(false);
 
@@ -139,14 +146,36 @@ export default function ConversationView() {
     setPendingImageUrl(null);
   }
 
-  async function toggleReadStatus(message) {
+  async function toggleReadReceipts() {
     const { data } = await supabase
-      .from('messages')
-      .update({ read_at: message.read_at ? null : new Date().toISOString() })
-      .eq('id', message.id)
+      .from('conversations')
+      .update({ read_receipts_enabled: !conversation.read_receipts_enabled })
+      .eq('id', conversationId)
       .select()
       .single();
-    if (data) setMessages((prev) => prev.map((m) => (m.id === message.id ? data : m)));
+    if (data) setConversation(data);
+  }
+
+  async function handleContactPhotoUploaded(url) {
+    const { data } = await supabase
+      .from('conversation_participants')
+      .update({ contact_photo_url: url })
+      .eq('conversation_id', conversationId)
+      .eq('character_id', characterId)
+      .select()
+      .single();
+    if (data) setMyContactPhotoUrl(data.contact_photo_url);
+  }
+
+  async function handleRemoveContactPhoto() {
+    const { data } = await supabase
+      .from('conversation_participants')
+      .update({ contact_photo_url: null })
+      .eq('conversation_id', conversationId)
+      .eq('character_id', characterId)
+      .select()
+      .single();
+    if (data) setMyContactPhotoUrl(data.contact_photo_url);
   }
 
   if (loading) return <p style={{ padding: '1rem' }}>Loading…</p>;
@@ -157,6 +186,12 @@ export default function ConversationView() {
   const title = conversation.kind === 'direct'
     ? otherParticipants[0]?.display_name
     : conversation.name || otherParticipants.map((p) => p.display_name).join(', ');
+
+  // My contact-photo override only ever applies to the one other person
+  // in a direct conversation — group chats keep everyone's real avatar.
+  const otherAvatarUrl = conversation.kind === 'direct'
+    ? myContactPhotoUrl || otherParticipants[0]?.avatar_url
+    : null;
 
   const clusters = clusterMessages(messages);
   const lastCluster = clusters[clusters.length - 1];
@@ -174,8 +209,8 @@ export default function ConversationView() {
           <div className="msg-convo-avatar">
             {conversation.kind === 'group' && conversation.avatar_url ? (
               <img src={conversation.avatar_url} alt="" />
-            ) : conversation.kind === 'direct' && otherParticipants[0]?.avatar_url ? (
-              <img src={otherParticipants[0].avatar_url} alt="" />
+            ) : conversation.kind === 'direct' && otherAvatarUrl ? (
+              <img src={otherAvatarUrl} alt="" />
             ) : (
               title?.[0]?.toUpperCase()
             )}
@@ -187,7 +222,9 @@ export default function ConversationView() {
             {editGroupOpen ? 'Cancel' : 'Edit'}
           </button>
         ) : (
-          <div style={{ width: 40 }} />
+          <button className="msg-back-btn" type="button" onClick={() => setDetailsOpen((v) => !v)}>
+            {detailsOpen ? 'Cancel' : 'Edit'}
+          </button>
         )}
       </div>
 
@@ -199,9 +236,43 @@ export default function ConversationView() {
         />
       )}
 
+      {detailsOpen && (
+        <div className="msg-details-panel">
+          <div className="msg-details-row">
+            <span>Read Receipts</span>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={conversation.read_receipts_enabled} onChange={toggleReadReceipts} />
+              <span className="toggle-switch-track">
+                <span className="toggle-switch-knob" />
+              </span>
+            </label>
+          </div>
+
+          <div className="msg-contact-photo-section">
+            <span className="msg-details-row-label">Contact Photo</span>
+            <div className="msg-contact-photo-edit">
+              <div className="msg-contact-photo-preview">
+                {otherAvatarUrl ? <img src={otherAvatarUrl} alt="" /> : otherParticipants[0]?.display_name?.[0]?.toUpperCase()}
+              </div>
+              <div className="msg-contact-photo-actions">
+                <UploadButton accept="image/*" className="msg-details-btn" onUploaded={handleContactPhotoUploaded}>
+                  Choose Photo
+                </UploadButton>
+                {myContactPhotoUrl && (
+                  <button type="button" className="msg-details-btn" onClick={handleRemoveContactPhoto}>
+                    Use Original Photo
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="msg-bubbles">
         {clusters.map((cluster, i) => {
           const isOwn = cluster.senderCharacterId === characterId;
+          const isLastCluster = i === clusters.length - 1;
           const sender = participants.find((p) => p?.id === cluster.senderCharacterId);
           return (
             <div key={i}>
@@ -209,7 +280,11 @@ export default function ConversationView() {
               <div className={`msg-cluster ${isOwn ? 'own' : 'other'}`}>
                 {!isOwn && (
                   <div className="msg-cluster-avatar">
-                    {sender?.avatar_url ? <img src={sender.avatar_url} alt="" /> : sender?.display_name?.[0]?.toUpperCase()}
+                    {(conversation.kind === 'direct' ? otherAvatarUrl : sender?.avatar_url) ? (
+                      <img src={conversation.kind === 'direct' ? otherAvatarUrl : sender.avatar_url} alt="" />
+                    ) : (
+                      sender?.display_name?.[0]?.toUpperCase()
+                    )}
                   </div>
                 )}
                 <div className="msg-cluster-bubbles">
@@ -219,24 +294,24 @@ export default function ConversationView() {
                       {m.content}
                     </div>
                   ))}
+                  {isLastCluster && lastClusterIsOwnDirect && lastMessageOfLastCluster && (
+                    <div className="msg-read-status">
+                      {conversation.read_receipts_enabled ? (
+                        lastMessageOfLastCluster.read_at ? (
+                          <span>Read {formatMessageTime(lastMessageOfLastCluster.read_at)}</span>
+                        ) : (
+                          <span>Not read yet</span>
+                        )
+                      ) : (
+                        <span>Delivered</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           );
         })}
-
-        {lastClusterIsOwnDirect && lastMessageOfLastCluster && (
-          <div className="msg-read-status">
-            {lastMessageOfLastCluster.read_at ? (
-              <span>Read {formatMessageTime(lastMessageOfLastCluster.read_at)}</span>
-            ) : (
-              <span>Not read yet</span>
-            )}
-            <button className="msg-read-toggle" type="button" onClick={() => toggleReadStatus(lastMessageOfLastCluster)}>
-              {lastMessageOfLastCluster.read_at ? 'Mark unread' : 'Mark read'}
-            </button>
-          </div>
-        )}
         <div ref={bottomRef} />
       </div>
 
@@ -256,6 +331,12 @@ export default function ConversationView() {
           placeholder="Text Message"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSend(e);
+            }
+          }}
           rows={1}
         />
         <button className="msg-send-btn" type="submit" disabled={sending || (!draft.trim() && !pendingImageUrl)} aria-label="Send">

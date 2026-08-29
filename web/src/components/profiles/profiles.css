@@ -110,7 +110,7 @@
   line-height: 1;
 }
 .profile-name { margin: 0; color: var(--muted); font-size: 14.5px; }
-.profile-bio { margin: 6px 0 0; font-size: 14.5px; line-height: 1.5; text-wrap: pretty; }
+.profile-bio { margin: 6px 0 0; font-size: 14.5px; line-height: 1.5; text-wrap: pretty; white-space: pre-wrap; }
 
 .profile-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
 .profile-newpost, .profile-edit-btn {

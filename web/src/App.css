@@ -364,7 +364,7 @@ body {
   cursor: pointer;
 }
 .icon-btn:hover { background: var(--overlay-2); }
-.bio { margin: 0; color: var(--color-text-dim); font-size: 1.05rem; line-height: 1.5; }
+.bio { margin: 0; color: var(--color-text-dim); font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; }
 
 .section-label { color: var(--color-text-dim); font-size: 0.92rem; letter-spacing: 0.04em; text-transform: uppercase; }
 .account-list { display: flex; flex-direction: column; gap: 0.85rem; }
