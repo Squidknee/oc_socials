@@ -166,6 +166,9 @@
 }
 .ig-action-btn:hover { background: var(--accent-wash); color: var(--accent); }
 .ig-action-btn:disabled { color: #cfc5bd; cursor: default; background: none; }
+/* Reblogging isn't wired up yet, but it shouldn't look disabled/unavailable
+   like the share button — same at-rest color as the enabled icons. */
+.ig-action-btn.reblog:disabled { color: var(--muted); }
 .ig-action-btn.is-liked { color: var(--like); font-weight: 550; }
 .ig-action-btn.is-liked:hover { background: rgba(194, 65, 92, 0.09); color: var(--like); }
 .ig-action-btn.share { margin-left: auto; }

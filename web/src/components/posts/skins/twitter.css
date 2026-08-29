@@ -141,6 +141,9 @@
 }
 .tw-action:hover { background: var(--accent-wash); color: var(--accent); }
 .tw-action:disabled { color: #cfc5bd; cursor: default; background: none; }
+/* Reblogging isn't wired up yet, but it shouldn't look disabled/unavailable
+   like the share button — same at-rest color as the enabled icons. */
+.tw-action.reblog:disabled { color: var(--muted); }
 .tw-action.is-liked { color: var(--like); font-weight: 550; }
 .tw-action.is-liked:hover { background: rgba(194, 65, 92, 0.09); color: var(--like); }
 .tw-action.share { margin-left: auto; }

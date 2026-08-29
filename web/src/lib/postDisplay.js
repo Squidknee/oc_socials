@@ -17,6 +17,23 @@ export function formatRelativeTime(dateString) {
   return new Date(dateString).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+// Abbreviates large counts the way Twitter/Instagram do (1.2k, 15k, 3.4m)
+// instead of ever showing a raw string of digits.
+export function formatCount(count) {
+  const abs = Math.abs(count);
+  if (abs < 1000) return String(count);
+
+  const units = [
+    [1_000_000_000, 'b'],
+    [1_000_000, 'm'],
+    [1_000, 'k'],
+  ];
+  const [divisor, suffix] = units.find(([div]) => abs >= div);
+  const truncated = Math.floor((count / divisor) * 10) / 10;
+  const value = Number.isInteger(truncated) ? truncated : truncated.toFixed(1);
+  return `${value}${suffix}`;
+}
+
 // Splits caption text into plain-text and hashtag segments so a skin can
 // style hashtags (e.g. in blue) without them being clickable — hashtags
 // are a display-only concern, never stored as their own column.

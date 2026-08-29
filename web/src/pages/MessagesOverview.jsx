@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { usePlatforms } from '../lib/PlatformsContext.jsx';
-import { fetchConversationSummaries, formatMessageTime } from '../lib/messaging.js';
+import { fetchConversationSummaries, formatConversationListTime } from '../lib/messaging.js';
 import './messages.css';
 
 const MAX_PINNED = 6;
@@ -251,7 +251,7 @@ export default function MessagesOverview() {
               </div>
             </Link>
             <div className="msg-list-meta">
-              {conversation.lastMessage && <span>{formatMessageTime(conversation.lastMessage.created_at)}</span>}
+              {conversation.lastMessage && <span>{formatConversationListTime(conversation.lastMessage.created_at)}</span>}
               {editMode && (
                 <>
                   <button type="button" onClick={() => togglePinned(conversation)} style={{ background: 'none', border: 'none', color: '#8e8e93', cursor: 'pointer', fontSize: '0.7rem' }}>

@@ -35,7 +35,6 @@ enter sends post vs shift enter which makes a new line
 
 respect enter/line breaks in bios
 
-character selector on the world screen?
 
 toggable character creator to create public characters that anyone can edit and post as vs private characters 
 
@@ -45,16 +44,17 @@ so whats new doesnt get long, maybe make it self contained and scrollable?
 
 also mention if you have unread messages as a character on a screen
 
-remove date from message
-
 comment deletion live update
 
 delete unused media files uploaded by users
 
-favicon 
-
 what happens if you dont have a character yet on the whats new page
 what happens when you have posts, delete your account, and then reupload. do posts stay the same? get remade? do they populate in order? 
-whats new should be chronological? 
+
+feed should be chronological but whats new should not (fabricating dates)
 
 fill in like button?
+
+advanced section in character cretor to make characters that anyone in the world can post as or edit 
+
+when clicking into the platform feeds, we also need the character selection drop down. since you wont be acting as a specific character yet 

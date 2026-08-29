@@ -90,3 +90,19 @@ export function formatMessageTime(dateString) {
   if (date.toDateString() === now.toDateString()) return time;
   return `${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}, ${time}`;
 }
+
+// Conversation-list timestamp (beside the chevron): time for today,
+// "Yesterday", weekday name within the past week, then a bare M/D/YY —
+// same escalation iMessage's own conversation list uses.
+export function formatConversationListTime(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+
+  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dayDiff = Math.round((startOfDay(now) - startOfDay(date)) / 86400000);
+
+  if (dayDiff === 0) return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  if (dayDiff === 1) return 'Yesterday';
+  if (dayDiff < 7) return date.toLocaleDateString(undefined, { weekday: 'long' });
+  return date.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: '2-digit' });
+}

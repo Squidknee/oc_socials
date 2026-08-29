@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../../lib/supabaseClient.js';
 import { useAuth } from '../../../lib/AuthContext.jsx';
-import { formatRelativeTime } from '../../../lib/postDisplay.js';
+import { formatRelativeTime, formatCount } from '../../../lib/postDisplay.js';
 import { usePostInteractions } from '../usePostInteractions.js';
 import HashtagText from '../HashtagText.jsx';
 import VerifiedBadge from '../../VerifiedBadge.jsx';
@@ -186,13 +186,13 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
           <svg width="22" height="22" viewBox="0 0 24 24" fill={viewerHasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 20s-7.2-4.4-9.5-9A5.4 5.4 0 0 1 12 6.2 5.4 5.4 0 0 1 21.5 11c-2.3 4.6-9.5 9-9.5 9z" />
           </svg>
-          {displayedLikeCount}
+          {formatCount(displayedLikeCount)}
         </button>
         <button className="ig-action-btn" type="button" onClick={toggleComments}>
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16v11H8l-4 4V5z" /></svg>
           {commentCount}
         </button>
-        <button className="ig-action-btn" type="button" disabled title="Not functional yet">
+        <button className="ig-action-btn reblog" type="button" disabled title="Not functional yet">
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
         </button>
         <button className="ig-action-btn share" type="button" disabled title="Not functional yet">
@@ -226,8 +226,8 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
 
       <p className="ig-post-likes">
         {likedByName
-          ? `Liked by ${likedByName}${displayedLikeCount > 1 ? ` and ${displayedLikeCount - 1} others` : ''}`
-          : `${displayedLikeCount} like${displayedLikeCount === 1 ? '' : 's'}`}
+          ? `Liked by ${likedByName}${displayedLikeCount > 1 ? ` and ${formatCount(displayedLikeCount - 1)} others` : ''}`
+          : `${formatCount(displayedLikeCount)} like${displayedLikeCount === 1 ? '' : 's'}`}
       </p>
 
       {post.content && (
