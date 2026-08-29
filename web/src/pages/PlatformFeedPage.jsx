@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../lib/AuthContext.jsx';
 import { usePlatforms } from '../lib/PlatformsContext.jsx';
-import { fetchViewerAccountId } from '../lib/platformAccounts.js';
 import { POST_SELECT, fetchPostById } from '../lib/posts.js';
 import Post from '../components/posts/Post.jsx';
 import '../components/profiles/profiles.css';
@@ -19,7 +18,12 @@ export default function PlatformFeedPage() {
   const platform = getPlatform(slug);
 
   const [posts, setPosts] = useState([]);
-  const [viewerAccountId, setViewerAccountId] = useState(null);
+  // Candidates for each post's own "act as" picker (see InstagramPost/
+  // TwitterPost) — every character you own here with an account on this
+  // platform. Same "never silently default, never persist a choice"
+  // model as WorldFeed's "What's New", since arriving at a platform feed
+  // doesn't establish who you're acting as any more than that does.
+  const [myAccounts, setMyAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,8 +45,30 @@ export default function PlatformFeedPage() {
       setLoading(false);
     }
 
+    async function fetchMyAccounts() {
+      const { data } = await supabase
+        .from('characters')
+        .select('id, display_name, avatar_url, platform_accounts ( id, platform_id )')
+        .eq('world_id', worldId)
+        .eq('owner_id', user.id);
+
+      const accounts = [];
+      for (const character of data ?? []) {
+        for (const account of character.platform_accounts ?? []) {
+          if (account.platform_id !== platform.id) continue;
+          accounts.push({
+            accountId: account.id,
+            characterId: character.id,
+            displayName: character.display_name,
+            avatarUrl: character.avatar_url,
+          });
+        }
+      }
+      setMyAccounts(accounts);
+    }
+
     fetchPosts();
-    fetchViewerAccountId({ worldId, platformSlug: slug, userId: user.id }).then(setViewerAccountId);
+    fetchMyAccounts();
   }, [worldId, slug, platform?.id, user.id]);
 
   // Live timeline: postgres_changes can only filter on one column, so this
@@ -94,7 +120,9 @@ export default function PlatformFeedPage() {
         ) : posts.length === 0 ? (
           <p className="profile-empty">No posts yet.</p>
         ) : (
-          posts.map((post) => <Post key={post.id} post={post} viewerAccountId={viewerAccountId} />)
+          posts.map((post) => (
+            <Post key={post.id} post={post} viewerAccountId={null} candidateAccounts={myAccounts} />
+          ))
         )}
       </div>
     </div>

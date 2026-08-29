@@ -7,10 +7,6 @@ nav bar padding
 reorder worlds by dragging -- edit layout type thing?
 reposition and resize images when uploading 
 
-imessage blue text padding -
-
-make read toggable in settings 
-
 password reset prompt 
 
 no comments yet formatting 
@@ -47,9 +43,6 @@ what happens when you have posts, delete your account, and then reupload. do pos
 
 feed should be chronological but whats new should not (fabricating dates)
 
-fill in like button?
-
-
-when clicking into the platform feeds, we also need the character selection drop down. since you wont be acting as a specific character yet 
-
 skin twitter and instagram feeds to make them more like the apps
+
+world owner should be able to edit site theme for that world

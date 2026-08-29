@@ -8,6 +8,14 @@ export function usePostInteractions(post, viewerAccountId) {
   const [extraMedia, setExtraMedia] = useState([]);
   const [likeRows, setLikeRows] = useState([]);
   const [likeBusy, setLikeBusy] = useState(false);
+  // On a page with no fixed viewerAccountId (World overview, platform
+  // feeds), there's nothing to compare likeRows against after a picked
+  // character likes a post — the heart would never fill in. This
+  // remembers whichever account this post was last liked as, purely for
+  // that post's own display; it's local to this component instance
+  // (never fetched/persisted) so a refresh forgets it, same as
+  // everything else about the per-interaction "act as" picker.
+  const [lastActingAccountId, setLastActingAccountId] = useState(viewerAccountId);
   const [commentCount, setCommentCount] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState([]);
@@ -130,7 +138,9 @@ export function usePostInteractions(post, viewerAccountId) {
     };
   }, [post.id]);
 
-  const viewerHasLiked = viewerAccountId ? likeRows.some((r) => r.platform_account_id === viewerAccountId) : false;
+  const viewerHasLiked = lastActingAccountId
+    ? likeRows.some((r) => r.platform_account_id === lastActingAccountId)
+    : false;
   const realLikeCount = likeRows.length;
 
   // overrideAccountId lets a caller act as a character it just picked for
@@ -141,6 +151,7 @@ export function usePostInteractions(post, viewerAccountId) {
     const accountId = overrideAccountId ?? viewerAccountId;
     if (!accountId || likeBusy) return;
     setLikeBusy(true);
+    setLastActingAccountId(accountId);
 
     const hasLiked = likeRows.some((r) => r.platform_account_id === accountId);
     if (hasLiked) {
