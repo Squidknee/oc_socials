@@ -13,8 +13,6 @@ no comments yet formatting
 
 following edits - add a following list 
 
-you should not be able to follow, like, or comment, on the world overview since you arent logged in as a character
-
 download button
 
 unique world id tokens 
@@ -29,8 +27,6 @@ also mention if you have unread messages as a character on a screen
 
 comment deletion live update
 
-delete unused media files uploaded by users
-
 what happens if you dont have a character yet on the whats new page
 what happens when you have posts, delete your account, and then reupload. do posts stay the same? get remade? do they populate in order? 
 
@@ -40,5 +36,3 @@ skin twitter and instagram feeds to make them more like the apps
 
 world owner should be able to edit site theme for that world
 
-sorry, heart should stay filled in until the page is reloaded manually. so either by the reload button or if you leave the page and then return to it
-also, like count should not go up if the acting as user has already liked the post, so please check that FIRST instead of removing the like after

@@ -16,7 +16,16 @@ const SKINS = {
 // do have an established identity (a character's own profile) pass a
 // real viewerAccountId instead and just don't pass this, and the skins
 // treat an empty candidate list as "nothing to offer."
-export default function Post({ post, viewerAccountId, candidateAccounts }) {
+//
+// likedAsAccountId/onLikedAsAccountIdChange are the same idea applied to
+// the heart's filled state specifically: a candidateAccounts page has no
+// fixed viewerAccountId to compare against after a picked character
+// likes a post, so the CALLING PAGE remembers "which account did I like
+// this post as" per post id and feeds it back in here — kept at the page
+// level (not local to this post's own component) so it survives the
+// list re-rendering/reordering and only actually resets when the page
+// itself unmounts or the browser reloads.
+export default function Post({ post, viewerAccountId, candidateAccounts, likedAsAccountId, onLikedAsAccountIdChange }) {
   const slug = post.platform_accounts?.platforms?.slug;
   const Skin = SKINS[slug];
 
@@ -25,5 +34,13 @@ export default function Post({ post, viewerAccountId, candidateAccounts }) {
     return null;
   }
 
-  return <Skin post={post} viewerAccountId={viewerAccountId} candidateAccounts={candidateAccounts} />;
+  return (
+    <Skin
+      post={post}
+      viewerAccountId={viewerAccountId}
+      candidateAccounts={candidateAccounts}
+      likedAsAccountId={likedAsAccountId}
+      onLikedAsAccountIdChange={onLikedAsAccountIdChange}
+    />
+  );
 }

@@ -4,18 +4,21 @@ import { supabase } from '../../lib/supabaseClient.js';
 // Shared like/comment/media logic for every platform's post skin —
 // pulled out once Twitter needed the same real likes+comments mechanic
 // Instagram already had, so the two skins don't drift out of sync.
-export function usePostInteractions(post, viewerAccountId) {
+//
+// likedAsAccountId/onLikedAsAccountIdChange are only supplied by pages
+// with no fixed viewerAccountId (World overview, platform feeds) — there,
+// nothing here would otherwise have anything to compare likeRows against
+// after a picked character likes a post, and the heart would never fill
+// in. Lifting this to the CALLING PAGE (rather than keeping it as local
+// state in this hook) means it survives this post's own component
+// remounting/re-rendering for any reason, and only actually resets when
+// the page itself unmounts (navigating away) or the browser reloads —
+// not some incidental side effect of how the list happens to re-render.
+export function usePostInteractions(post, viewerAccountId, { likedAsAccountId, onLikedAsAccountIdChange } = {}) {
+  const effectiveLikedAsAccountId = likedAsAccountId ?? viewerAccountId;
   const [extraMedia, setExtraMedia] = useState([]);
   const [likeRows, setLikeRows] = useState([]);
   const [likeBusy, setLikeBusy] = useState(false);
-  // On a page with no fixed viewerAccountId (World overview, platform
-  // feeds), there's nothing to compare likeRows against after a picked
-  // character likes a post — the heart would never fill in. This
-  // remembers whichever account this post was last liked as, purely for
-  // that post's own display; it's local to this component instance
-  // (never fetched/persisted) so a refresh forgets it, same as
-  // everything else about the per-interaction "act as" picker.
-  const [lastActingAccountId, setLastActingAccountId] = useState(viewerAccountId);
   const [commentCount, setCommentCount] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState([]);
@@ -138,8 +141,8 @@ export function usePostInteractions(post, viewerAccountId) {
     };
   }, [post.id]);
 
-  const viewerHasLiked = lastActingAccountId
-    ? likeRows.some((r) => r.platform_account_id === lastActingAccountId)
+  const viewerHasLiked = effectiveLikedAsAccountId
+    ? likeRows.some((r) => r.platform_account_id === effectiveLikedAsAccountId)
     : false;
   const realLikeCount = likeRows.length;
 
@@ -151,22 +154,39 @@ export function usePostInteractions(post, viewerAccountId) {
     const accountId = overrideAccountId ?? viewerAccountId;
     if (!accountId || likeBusy) return;
     setLikeBusy(true);
-    setLastActingAccountId(accountId);
+    onLikedAsAccountIdChange?.(accountId);
 
+    // Checked against likeRows (not re-fetched) so this never fires a
+    // redundant insert for an account that's already liked — the local
+    // state IS kept honest with the database below, by only ever
+    // applying an optimistic change once its own request actually
+    // succeeded, instead of assuming success and reconciling afterward.
     const hasLiked = likeRows.some((r) => r.platform_account_id === accountId);
     if (hasLiked) {
-      await supabase.from('likes').delete().eq('post_id', post.id).eq('platform_account_id', accountId);
-      setLikeRows((rows) => rows.filter((r) => r.platform_account_id !== accountId));
+      const { error } = await supabase.from('likes').delete().eq('post_id', post.id).eq('platform_account_id', accountId);
+      if (!error) setLikeRows((rows) => rows.filter((r) => r.platform_account_id !== accountId));
     } else {
       // Needs the real row back (not just an optimistic placeholder) so
       // the live INSERT echo for this same like can recognize it by id
       // and skip re-adding it.
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('likes')
         .insert({ post_id: post.id, platform_account_id: accountId })
         .select('id, platform_account_id, platform_accounts ( display_name )')
         .single();
       if (data) setLikeRows((rows) => [...rows, data]);
+      // 23505 = unique_violation — a like row for this account already
+      // exists (likeRows was stale), so this account really is liked;
+      // reflect that instead of leaving the heart looking unliked.
+      else if (error?.code === '23505') {
+        const { data: existing } = await supabase
+          .from('likes')
+          .select('id, platform_account_id, platform_accounts ( display_name )')
+          .eq('post_id', post.id)
+          .eq('platform_account_id', accountId)
+          .maybeSingle();
+        if (existing) setLikeRows((rows) => (rows.some((r) => r.id === existing.id) ? rows : [...rows, existing]));
+      }
     }
 
     setLikeBusy(false);

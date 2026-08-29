@@ -46,6 +46,12 @@ export default function WorldFeed() {
   // across posts or interactions; every like/comment prompts you to pick
   // fresh, by design.
   const [candidateAccountsBySlug, setCandidateAccountsBySlug] = useState({});
+  // Which account each post was liked as, for the heart's filled state
+  // (see Post.jsx) — kept here at the page level, not inside each post's
+  // own component, so it survives recentPosts re-rendering/reordering and
+  // only resets when this whole page unmounts (navigating away) or the
+  // browser reloads.
+  const [likedAsAccountByPost, setLikedAsAccountByPost] = useState({});
 
   async function fetchOtherCharacters() {
     // Public characters get their own "Shared Characters" section below
@@ -302,6 +308,10 @@ export default function WorldFeed() {
                     post={post}
                     viewerAccountId={null}
                     candidateAccounts={candidateAccountsBySlug[slug] ?? []}
+                    likedAsAccountId={likedAsAccountByPost[post.id]}
+                    onLikedAsAccountIdChange={(accountId) =>
+                      setLikedAsAccountByPost((prev) => ({ ...prev, [post.id]: accountId }))
+                    }
                   />
                 );
               })

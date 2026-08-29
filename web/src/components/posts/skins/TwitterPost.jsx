@@ -9,7 +9,7 @@ import VerifiedBadge from '../../VerifiedBadge.jsx';
 import PostComposer from '../../composer/PostComposer.jsx';
 import './twitter.css';
 
-export default function TwitterPost({ post: postProp, viewerAccountId, candidateAccounts = [] }) {
+export default function TwitterPost({ post: postProp, viewerAccountId, candidateAccounts = [], likedAsAccountId, onLikedAsAccountIdChange }) {
   const { user } = useAuth();
   // Local copy so a successful edit reflects immediately without needing
   // to thread an update callback up through every page that renders a
@@ -49,7 +49,7 @@ export default function TwitterPost({ post: postProp, viewerAccountId, candidate
     extraMedia, realLikeCount, viewerHasLiked, likeBusy, toggleLike,
     commentCount, commentsOpen, comments, toggleComments,
     newComment, setNewComment, postingComment, handleAddComment, deleteComment,
-  } = usePostInteractions(post, viewerAccountId);
+  } = usePostInteractions(post, viewerAccountId, { likedAsAccountId, onLikedAsAccountIdChange });
 
   function handleLikeClick() {
     if (canPickAccount) {

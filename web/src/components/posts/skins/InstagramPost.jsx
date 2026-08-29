@@ -10,7 +10,7 @@ import PostComposer from '../../composer/PostComposer.jsx';
 import '../posts.css';
 
 // Renders one post the way this world's "Instagram" would show it.
-export default function InstagramPost({ post: postProp, viewerAccountId, candidateAccounts = [] }) {
+export default function InstagramPost({ post: postProp, viewerAccountId, candidateAccounts = [], likedAsAccountId, onLikedAsAccountIdChange }) {
   const { user } = useAuth();
   // Local copy so a successful edit reflects immediately without needing
   // to thread an update callback up through every page that renders a
@@ -93,7 +93,7 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
     extraMedia, realLikeCount, viewerHasLiked, likeBusy, toggleLike, likeRows,
     commentCount, commentsOpen, comments, toggleComments,
     newComment, setNewComment, postingComment, handleAddComment, deleteComment,
-  } = usePostInteractions(post, viewerAccountId);
+  } = usePostInteractions(post, viewerAccountId, { likedAsAccountId, onLikedAsAccountIdChange });
 
   // "Liked by" prefers someone the viewer actually follows, so it reads as
   // a genuine social signal rather than a random name — Instagram-only,

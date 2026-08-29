@@ -25,6 +25,11 @@ export default function PlatformFeedPage() {
   // doesn't establish who you're acting as any more than that does.
   const [myAccounts, setMyAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Which account each post was liked as, for the heart's filled state
+  // (see Post.jsx) — kept here at the page level so it survives posts
+  // re-rendering/reordering and only resets on navigating away or a
+  // browser reload, same reasoning as WorldFeed's own copy of this.
+  const [likedAsAccountByPost, setLikedAsAccountByPost] = useState({});
 
   useEffect(() => {
     if (!platform) return;
@@ -124,7 +129,16 @@ export default function PlatformFeedPage() {
           <p className="profile-empty">No posts yet.</p>
         ) : (
           posts.map((post) => (
-            <Post key={post.id} post={post} viewerAccountId={null} candidateAccounts={myAccounts} />
+            <Post
+              key={post.id}
+              post={post}
+              viewerAccountId={null}
+              candidateAccounts={myAccounts}
+              likedAsAccountId={likedAsAccountByPost[post.id]}
+              onLikedAsAccountIdChange={(accountId) =>
+                setLikedAsAccountByPost((prev) => ({ ...prev, [post.id]: accountId }))
+              }
+            />
           ))
         )}
       </div>
