@@ -33,17 +33,69 @@ export default function WorldFeed() {
   const [world, setWorld] = useState(null);
   const [worldStats, setWorldStats] = useState(null);
   const [otherCharacters, setOtherCharacters] = useState([]);
+  const [sharedCharacters, setSharedCharacters] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
   const [platformCounts, setPlatformCounts] = useState([]);
   const [invite, setInvite] = useState(null);
   const [generatingInvite, setGeneratingInvite] = useState(false);
   const [editWorldOpen, setEditWorldOpen] = useState(false);
   // Candidates for each post's own "act as" picker (see InstagramPost/
-  // TwitterPost) — every character you own here, grouped by platform
-  // slug. Deliberately not "which one is currently acting" — nothing here
-  // persists a choice across posts or interactions; every like/comment
-  // prompts you to pick fresh, by design.
-  const [myAccountsBySlug, setMyAccountsBySlug] = useState({});
+  // TwitterPost) — every character you own here PLUS every public/shared
+  // character in this world, grouped by platform slug. Deliberately not
+  // "which one is currently acting" — nothing here persists a choice
+  // across posts or interactions; every like/comment prompts you to pick
+  // fresh, by design.
+  const [candidateAccountsBySlug, setCandidateAccountsBySlug] = useState({});
+
+  async function fetchOtherCharacters() {
+    // Public characters get their own "Shared Characters" section below
+    // instead of showing up here too.
+    const { data } = await supabase
+      .from('characters')
+      .select('id, handle, display_name, avatar_url')
+      .eq('world_id', worldId)
+      .eq('is_public', false)
+      .neq('owner_id', user.id);
+    setOtherCharacters(data ?? []);
+  }
+
+  async function fetchSharedCharacters() {
+    const { data } = await supabase
+      .from('characters')
+      .select('id, handle, display_name, avatar_url')
+      .eq('world_id', worldId)
+      .eq('is_public', true);
+    setSharedCharacters(data ?? []);
+  }
+
+  // Candidates for the per-post "act as" picker — every character you
+  // own here, PLUS every public/shared character (can_act_as_character,
+  // 0029, is the real enforcement — this is just deciding what to
+  // offer), with whichever platform accounts they have. Grouped by slug
+  // since a post's picker only ever needs candidates for that post's
+  // own platform.
+  async function fetchCandidateAccounts() {
+    const { data } = await supabase
+      .from('characters')
+      .select('id, display_name, avatar_url, platform_accounts ( id, platforms ( slug ) )')
+      .eq('world_id', worldId)
+      .or(`owner_id.eq.${user.id},is_public.eq.true`);
+
+    const bySlug = {};
+    for (const character of data ?? []) {
+      for (const account of character.platform_accounts ?? []) {
+        const slug = account.platforms?.slug;
+        if (!slug) continue;
+        (bySlug[slug] ??= []).push({
+          accountId: account.id,
+          characterId: character.id,
+          displayName: character.display_name,
+          avatarUrl: character.avatar_url,
+        });
+      }
+    }
+    setCandidateAccountsBySlug(bySlug);
+  }
 
   useEffect(() => {
     async function fetchWorld() {
@@ -51,47 +103,11 @@ export default function WorldFeed() {
       // with no real foreign key for PostgREST to auto-detect, so this
       // is a second query rather than a joined select.
       const [{ data }, { data: stats }] = await Promise.all([
-        supabase.from('worlds').select('id, name, description, avatar_url, owner_id').eq('id', worldId).single(),
+        supabase.from('worlds').select('id, name, description, avatar_url, owner_id, public_characters_enabled').eq('id', worldId).single(),
         supabase.from('world_stats').select('character_count, member_count, post_count').eq('world_id', worldId).maybeSingle(),
       ]);
       setWorld(data);
       setWorldStats(stats);
-    }
-
-    async function fetchOtherCharacters() {
-      const { data } = await supabase
-        .from('characters')
-        .select('id, handle, display_name, avatar_url')
-        .eq('world_id', worldId)
-        .neq('owner_id', user.id);
-      setOtherCharacters(data ?? []);
-    }
-
-    // Candidates for the per-post "act as" picker — every character you
-    // own here, with whichever platform accounts they have. Grouped by
-    // slug since a post's picker only ever needs candidates for that
-    // post's own platform.
-    async function fetchMyAccounts() {
-      const { data } = await supabase
-        .from('characters')
-        .select('id, display_name, avatar_url, platform_accounts ( id, platforms ( slug ) )')
-        .eq('world_id', worldId)
-        .eq('owner_id', user.id);
-
-      const bySlug = {};
-      for (const character of data ?? []) {
-        for (const account of character.platform_accounts ?? []) {
-          const slug = account.platforms?.slug;
-          if (!slug) continue;
-          (bySlug[slug] ??= []).push({
-            accountId: account.id,
-            characterId: character.id,
-            displayName: character.display_name,
-            avatarUrl: character.avatar_url,
-          });
-        }
-      }
-      setMyAccountsBySlug(bySlug);
     }
 
     async function fetchRecentPosts() {
@@ -106,9 +122,34 @@ export default function WorldFeed() {
 
     fetchWorld();
     fetchOtherCharacters();
-    fetchMyAccounts();
+    fetchSharedCharacters();
+    fetchCandidateAccounts();
     fetchRecentPosts();
     setCurrentWorldId(worldId);
+  }, [worldId, user.id]);
+
+  // Live "Shared Characters": is_public can flip (or a character can be
+  // created/deleted) from any tab, not just this one, so this re-derives
+  // all three character-driven lists on any change instead of trying to
+  // hand-patch a single row between "shared" and "other" in place — same
+  // "just re-derive" reasoning as MessagesOverview's own realtime effect.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`world-characters:${worldId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'characters', filter: `world_id=eq.${worldId}` },
+        () => {
+          fetchOtherCharacters();
+          fetchSharedCharacters();
+          fetchCandidateAccounts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [worldId, user.id]);
 
   // Live "What's New": postgres_changes only hands back the raw posts
@@ -260,7 +301,7 @@ export default function WorldFeed() {
                     key={post.id}
                     post={post}
                     viewerAccountId={null}
-                    candidateAccounts={myAccountsBySlug[slug] ?? []}
+                    candidateAccounts={candidateAccountsBySlug[slug] ?? []}
                   />
                 );
               })
@@ -294,6 +335,23 @@ export default function WorldFeed() {
                 <Link className="platform-link" to={`/worlds/${worldId}/platforms/${p.slug}`} key={p.slug}>
                   {p.name}
                   <span className="platform-link-count">{p.count}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {world?.public_characters_enabled && sharedCharacters.length > 0 && (
+            <div className="hub-panel padded">
+              <span className="hub-panel-label">Shared Characters</span>
+              {sharedCharacters.map((c) => (
+                <Link className="side-char" to={`/characters/${c.id}`} key={c.id}>
+                  <span className="side-char-avatar">
+                    {c.avatar_url ? <img src={c.avatar_url} alt="" /> : monogram(c.display_name)}
+                  </span>
+                  <span className="side-char-text">
+                    <span className="side-char-name">{c.display_name}</span>
+                    <span className="side-char-handle">@{c.handle}</span>
+                  </span>
                 </Link>
               ))}
             </div>

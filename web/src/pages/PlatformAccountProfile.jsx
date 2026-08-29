@@ -17,7 +17,7 @@ export default function PlatformAccountProfile() {
       const { data, error } = await supabase
         .from('platform_accounts')
         .select(
-          'id, handle, display_name, avatar_url, bio, verified, world_id, character_id, characters ( owner_id, display_name ), platforms ( * ), worlds ( name )'
+          'id, handle, display_name, avatar_url, bio, verified, world_id, character_id, characters ( owner_id, display_name, is_public ), platforms ( * ), worlds ( name )'
         )
         .eq('id', accountId)
         .single();
@@ -35,10 +35,14 @@ export default function PlatformAccountProfile() {
   if (loading) return <p style={{ padding: '1rem' }}>Loading…</p>;
   if (!account) return <p style={{ padding: '1rem' }}>Account not found.</p>;
 
+  // "isOwner" here really means "can manage this account" — true ownership
+  // OR a public/shared character, which anyone in the world can post as
+  // and edit (platform_accounts_update_shared, 0029, is the real
+  // enforcement; this just decides what the UI offers).
   return (
     <PlatformProfile
       account={account}
-      isOwner={account.characters?.owner_id === user.id}
+      isOwner={account.characters?.owner_id === user.id || !!account.characters?.is_public}
       onAccountUpdated={setAccount}
     />
   );

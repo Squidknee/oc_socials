@@ -31,7 +31,7 @@ export default function EditAccountForm({ account, onSaved, onCancel }) {
         verified,
       })
       .eq('id', account.id)
-      .select('id, handle, display_name, avatar_url, bio, verified, world_id, character_id, characters ( owner_id ), platforms ( * )')
+      .select('id, handle, display_name, avatar_url, bio, verified, world_id, character_id, characters ( owner_id, is_public ), platforms ( * )')
       .single();
 
     setSubmitting(false);

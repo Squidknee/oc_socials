@@ -19,6 +19,7 @@ export default function CreateCharacter() {
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [bio, setBio] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -44,6 +45,7 @@ export default function CreateCharacter() {
         display_name: displayName,
         avatar_url: avatarUrl || null,
         bio: bio || null,
+        is_public: isPublic,
       })
       .select()
       .single();
@@ -115,6 +117,20 @@ export default function CreateCharacter() {
             <label htmlFor="bio">Bio <span className="field-optional">(optional)</span></label>
             <textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="fixes things, badly." />
           </div>
+
+          <div className="toggle-row" style={{ color: 'var(--color-text)' }}>
+            <span>Make this character public</span>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+              <span className="toggle-switch-track">
+                <span className="toggle-switch-knob" />
+              </span>
+            </label>
+          </div>
+          <span className="helper">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+            Public characters can be posted as and edited by anyone in this world. Defaults to private — you can change this later.
+          </span>
 
           {error && <p style={{ color: 'crimson' }}>{error}</p>}
 

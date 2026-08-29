@@ -23,13 +23,6 @@ posted via... padding
 
 comment deletion
 
-
-advanced section in character cretor to make characters that anyone in the world can post as or edit default is private. make a;ll existing characters private. warn users before toggling public on for already created charactres
-
-toggable character creator to create public characters that anyone can edit and post as vs private characters 
-
-have a section dedicated to "public characters" that you can switch into 
-
 is there a limit for how many posts can show up in whats new? so whats new doesnt get long, maybe make it self contained and scrollable? 
 
 also mention if you have unread messages as a character on a screen
@@ -46,3 +39,6 @@ feed should be chronological but whats new should not (fabricating dates)
 skin twitter and instagram feeds to make them more like the apps
 
 world owner should be able to edit site theme for that world
+
+sorry, heart should stay filled in until the page is reloaded manually. so either by the reload button or if you leave the page and then return to it
+also, like count should not go up if the acting as user has already liked the post, so please check that FIRST instead of removing the like after

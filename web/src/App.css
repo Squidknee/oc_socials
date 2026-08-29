@@ -407,3 +407,40 @@ body {
   padding: 0.15rem 0.65rem;
 }
 .account-handle { color: var(--color-text-dim); font-size: 0.95rem; line-height: 1; }
+
+/* Toggle switch — the one shared toggle style, used app-wide (world/
+   character settings, message settings, etc). Teal track when on, light
+   grey when off, white knob — same look regardless of what page it's on. */
+.toggle-switch { position: relative; display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0; }
+.toggle-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+.toggle-switch-track {
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: #d9d9d9;
+  display: inline-block;
+  position: relative;
+  transition: background 150ms ease;
+}
+.toggle-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 150ms ease;
+}
+.toggle-switch input:checked + .toggle-switch-track { background: #14a89e; }
+.toggle-switch input:checked + .toggle-switch-track .toggle-switch-knob { transform: translateX(20px); }
+
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }

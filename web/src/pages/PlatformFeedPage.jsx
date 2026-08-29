@@ -46,11 +46,14 @@ export default function PlatformFeedPage() {
     }
 
     async function fetchMyAccounts() {
+      // Every character you own here, PLUS every public/shared character
+      // (can_act_as_character, 0029, is the real enforcement) — same
+      // candidate pool WorldFeed's "What's New" offers.
       const { data } = await supabase
         .from('characters')
         .select('id, display_name, avatar_url, platform_accounts ( id, platform_id )')
         .eq('world_id', worldId)
-        .eq('owner_id', user.id);
+        .or(`owner_id.eq.${user.id},is_public.eq.true`);
 
       const accounts = [];
       for (const character of data ?? []) {

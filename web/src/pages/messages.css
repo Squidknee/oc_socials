@@ -220,38 +220,8 @@
 .msg-details-btn { background: none; border: none; color: #0b84fe; font-size: 0.9rem; font-family: inherit; cursor: pointer; padding: 0; }
 .msg-details-btn:disabled { color: #a9d4ff; cursor: default; }
 
-/* Toggle switch — teal track when on, light grey when off, white knob */
-.toggle-switch { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
-.toggle-switch input {
-  position: absolute;
-  opacity: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  cursor: pointer;
-}
-.toggle-switch-track {
-  width: 44px;
-  height: 24px;
-  border-radius: 999px;
-  background: #d9d9d9;
-  display: inline-block;
-  position: relative;
-  transition: background 150ms ease;
-}
-.toggle-switch-knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-  transition: transform 150ms ease;
-}
-.toggle-switch input:checked + .toggle-switch-track { background: #14a89e; }
-.toggle-switch input:checked + .toggle-switch-track .toggle-switch-knob { transform: translateX(20px); }
+/* Toggle switch now lives in App.css — it's the one shared toggle style
+   used app-wide, not just here, so any page can reach it. */
 
 /* Conversation view */
 .msg-convo-header {

@@ -30,7 +30,7 @@ export default function CharacterManager({ worldId }) {
     // their posts, but aren't something you can manage here.
     const { data, error } = await supabase
       .from('characters')
-      .select('id, handle, display_name, avatar_url, bio, world_id')
+      .select('id, handle, display_name, avatar_url, bio, world_id, is_public')
       .eq('world_id', worldId)
       .eq('owner_id', user.id);
 
