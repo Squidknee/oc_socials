@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/supabaseClient.js';
 import { useAuth } from '../../../lib/AuthContext.jsx';
 import { formatRelativeTime, formatCount } from '../../../lib/postDisplay.js';
 import { usePostInteractions } from '../usePostInteractions.js';
+import { useFollow } from '../../profiles/useFollow.js';
 import HashtagText from '../HashtagText.jsx';
 import VerifiedBadge from '../../VerifiedBadge.jsx';
 import PostComposer from '../../composer/PostComposer.jsx';
@@ -30,6 +31,16 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
   const [editing, setEditing] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [captionExpanded, setCaptionExpanded] = useState(false);
+  // Only meaningful with a real fixed viewerAccountId (a profile's own
+  // post list) — a mixed feed with no established identity has no "are
+  // you following them" to answer any more than it has a fixed "have you
+  // liked this," so this just always reads as not-following there.
+  const { following, toggleFollow, busy: followBusy } = useFollow({
+    followedAccountId: account?.id,
+    viewerAccountId,
+    worldId: account?.world_id,
+  });
   // Nothing here ever persists a chosen account — every like/comment
   // interaction prompts fresh, by design (World overview's per-post
   // picker, not a switcher you set once). pendingAction tracks which
@@ -127,6 +138,9 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
   ];
   const current = media[mediaIndex];
   const displayedLikeCount = post.base_like_count + realLikeCount;
+  // Whichever candidate the "act as" picker resolved to for commenting —
+  // just for the persistent comment bar's own avatar, purely cosmetic.
+  const commentingAsAvatar = candidateAccounts.find((c) => c.accountId === effectiveCommentAccountId)?.avatarUrl;
 
   return (
     <>
@@ -140,13 +154,28 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
           )}
         </Link>
         <div className="ig-post-headerinfo">
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            <Link className="ig-post-handle" to={`/accounts/${account?.id}`}>{account?.handle}</Link>
-            {account?.verified && <VerifiedBadge size={13} />}
-          </span>
-          <span className="ig-post-time">{formatRelativeTime(post.created_at)}</span>
+          <Link className="ig-post-handle" to={`/accounts/${account?.id}`}>{account?.handle}</Link>
+          {account?.verified && <VerifiedBadge size={13} />}
+          {!isOwnPost && viewerAccountId && (
+            following ? (
+              <span className="ig-post-following">· Following</span>
+            ) : (
+              <button className="ig-post-follow-btn" type="button" onClick={toggleFollow} disabled={followBusy}>
+                · Follow
+              </button>
+            )
+          )}
         </div>
-        <span className="ig-platform-chip">{account?.platforms?.name}</span>
+        {isOwnPost && (
+          <div className="ig-post-header-actions">
+            <button className="ig-icon-btn" type="button" onClick={() => setEditing((v) => !v)} aria-label="Edit post" title="Edit post">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h4L20 8l-4-4L4 16z" /></svg>
+            </button>
+            <button className="ig-icon-btn" type="button" onClick={handleDelete} disabled={deleting} aria-label="Delete post" title="Delete post">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16" /><path d="M9 7V5h6v2" /><path d="M6 7l1 13h10l1-13" /></svg>
+            </button>
+          </div>
+        )}
       </header>
 
       {current && (
@@ -182,32 +211,24 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
           onClick={handleLikeClick}
           disabled={(!viewerAccountId && !canPickAccount) || likeBusy}
           title={viewerAccountId ? undefined : canPickAccount ? 'Pick a character to act as' : 'Pick a character to act as first'}
+          aria-label="Like"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill={viewerHasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill={viewerHasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 20s-7.2-4.4-9.5-9A5.4 5.4 0 0 1 12 6.2 5.4 5.4 0 0 1 21.5 11c-2.3 4.6-9.5 9-9.5 9z" />
           </svg>
-          {formatCount(displayedLikeCount)}
         </button>
-        <button className="ig-action-btn" type="button" onClick={toggleComments}>
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16v11H8l-4 4V5z" /></svg>
-          {commentCount}
+        <button className="ig-action-btn" type="button" onClick={toggleComments} aria-label="Comment">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16v11H8l-4 4V5z" /></svg>
         </button>
-        <button className="ig-action-btn reblog" type="button" disabled title="Not functional yet">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
+        <button className="ig-action-btn reblog" type="button" disabled title="Not functional yet" aria-label="Reblog">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>
         </button>
-        <button className="ig-action-btn share" type="button" disabled title="Not functional yet">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+        <button className="ig-action-btn share" type="button" disabled title="Not functional yet" aria-label="Share">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" /></svg>
         </button>
-        {isOwnPost && (
-          <>
-            <button className="ig-action-btn" type="button" onClick={() => setEditing((v) => !v)} aria-label="Edit post" title="Edit post">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h4L20 8l-4-4L4 16z" /></svg>
-            </button>
-            <button className="ig-action-btn" type="button" onClick={handleDelete} disabled={deleting} aria-label="Delete post" title="Delete post">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16" /><path d="M9 7V5h6v2" /><path d="M6 7l1 13h10l1-13" /></svg>
-            </button>
-          </>
-        )}
+        <button className="ig-action-btn bookmark" type="button" disabled title="Not functional yet" aria-label="Save">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" /></svg>
+        </button>
 
         {pickerOpen && (
           <div className="ig-account-dropdown">
@@ -231,14 +252,26 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
       </p>
 
       {post.content && (
-        <p className="ig-post-caption">
-          <strong>{account?.handle}</strong> <HashtagText text={post.content} />
-        </p>
+        <>
+          <p className={`ig-post-caption${captionExpanded ? '' : ' is-clamped'}`}>
+            <strong>{account?.handle}</strong> <HashtagText text={post.content} />
+          </p>
+          {/* -webkit-line-clamp just clips overflow — anything placed
+              inside the clamped text would get cut off along with it, so
+              this sits below the paragraph instead of inline at its end. */}
+          {!captionExpanded && post.content.length > 60 && (
+            <button className="ig-post-caption-more" type="button" onClick={() => setCaptionExpanded(true)}>
+              more
+            </button>
+          )}
+        </>
       )}
 
       <button className="ig-post-comments-toggle" type="button" onClick={toggleComments}>
         {commentCount > 0 ? `View all ${commentCount} comments` : 'No comments yet'}
       </button>
+
+      <span className="ig-post-time">{formatRelativeTime(post.created_at)}</span>
 
       {commentsOpen && (
         <div className="ig-post-comments">
@@ -261,21 +294,29 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
               )}
             </p>
           ))}
-          <form className="ig-comment-form" onSubmit={submitComment}>
-            <input
-              type="text"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onFocus={handleCommentInputFocus}
-              placeholder={effectiveCommentAccountId ? 'Add a comment…' : candidateAccounts.length > 0 ? 'Pick a character to act as' : 'Pick a character to act as first'}
-              disabled={(!effectiveCommentAccountId && candidateAccounts.length === 0) || postingComment}
-            />
-            <button type="submit" disabled={!effectiveCommentAccountId || !newComment.trim() || postingComment}>
-              Post
-            </button>
-          </form>
         </div>
       )}
+
+      <form className="ig-comment-form" onSubmit={submitComment}>
+        <span className="ig-comment-form-avatar">
+          {commentingAsAvatar ? <img src={commentingAsAvatar} alt="" /> : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="3.4" /><path d="M4.5 20c1.4-3.6 4.4-5.4 7.5-5.4s6.1 1.8 7.5 5.4" /></svg>
+          )}
+        </span>
+        <input
+          type="text"
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          onFocus={handleCommentInputFocus}
+          placeholder={effectiveCommentAccountId ? 'Add a comment…' : candidateAccounts.length > 0 ? 'Pick a character to act as' : 'Pick a character to act as first'}
+          disabled={(!effectiveCommentAccountId && candidateAccounts.length === 0) || postingComment}
+        />
+        {newComment.trim() && (
+          <button type="submit" disabled={!effectiveCommentAccountId || postingComment}>
+            Post
+          </button>
+        )}
+      </form>
     </article>
 
     {editing && (

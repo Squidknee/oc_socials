@@ -1,9 +1,10 @@
-/* Instagram-style post skin — polished (design 1b).
-   Drop-in replacement for web/src/components/posts/skins/../posts.css
-   Still an original "photo feed post" pattern, not a copy of any real
-   app's chrome. Requires the small markup additions listed in the
-   handoff README (platform chip, carousel counter, inline counts,
-   comment avatars, comment pill). */
+/* Instagram-style post skin — reformatted to match real Instagram's own
+   layout closely: icon-only action row (counts live in their own text
+   lines below, not inline on the buttons), timestamp moved out of the
+   header to the bottom, a persistent "Add a comment" bar instead of one
+   that only appears once the comment list is opened, and a header
+   Follow/Following indicator. Still an original pattern otherwise, not a
+   pixel copy of the real app. */
 
 .ig-post {
   --ink: #1a1512;
@@ -39,8 +40,8 @@
   padding: 12px 14px;
 }
 .ig-post-avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
@@ -55,22 +56,36 @@
 }
 .ig-post-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-.ig-post-headerinfo { display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0; }
-.ig-post-handle { font-weight: 650; font-size: 14.5px; color: inherit; text-decoration: none; }
-.ig-post-time { font-size: 12.5px; color: var(--muted); }
-
-/* NEW — says which in-world platform this post came from */
-.ig-platform-chip {
-  flex-shrink: 0;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.ig-post-headerinfo { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; flex-grow: 1; min-width: 0; }
+.ig-post-handle { font-weight: 650; font-size: 14px; color: inherit; text-decoration: none; }
+.ig-post-following { font-size: 14px; color: var(--muted); }
+.ig-post-follow-btn {
+  background: none;
+  border: none;
+  padding: 0;
   color: var(--accent);
-  background: var(--accent-wash);
-  border-radius: 999px;
-  padding: 4px 9px;
-  line-height: 1;
+  font-weight: 650;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
 }
+.ig-post-follow-btn:disabled { color: var(--faint); cursor: default; }
+
+.ig-post-header-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.ig-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 6px;
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.ig-icon-btn:hover { background: var(--accent-wash); color: var(--accent); }
+.ig-icon-btn:disabled { color: #cfc5bd; cursor: default; background: none; }
 
 /* ---------- media ---------- */
 
@@ -140,42 +155,45 @@
 }
 .ig-carousel-dot.active { width: 16px; background: #fff; }
 
-/* ---------- action row (now carries counts) ---------- */
+/* ---------- action row — icon-only, counts live below as their own
+   lines ("87 likes" / "View all N comments"), matching real Instagram
+   rather than the inline-count style Twitter's skin uses. ---------- */
 
 .ig-post-actions {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 8px 8px 0;
+  padding: 10px 10px 6px;
   position: relative;
 }
 .ig-action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
   background: none;
   border: none;
-  padding: 8px;
+  padding: 6px;
   border-radius: 8px;
   cursor: pointer;
-  color: var(--muted);
-  font-size: 13.5px;
-  font-family: inherit;
-  font-variant-numeric: tabular-nums;
-  transition: background 120ms ease, color 120ms ease;
+  color: var(--ink);
+  transition: background 120ms ease, color 120ms ease, transform 80ms ease;
 }
 .ig-action-btn:hover { background: var(--accent-wash); color: var(--accent); }
-.ig-action-btn:disabled { color: #cfc5bd; cursor: default; background: none; }
-/* Reblogging isn't wired up yet, but it shouldn't look disabled/unavailable
-   like the share button — same at-rest color as the enabled icons. */
-.ig-action-btn.reblog:disabled { color: var(--muted); }
-.ig-action-btn.is-liked { color: var(--like); font-weight: 550; }
+.ig-action-btn:active { transform: scale(0.9); }
+.ig-action-btn:disabled { color: #cfc5bd; cursor: default; background: none; transform: none; }
+/* Reblog/share/bookmark aren't wired up yet, but none of them should look
+   disabled/unavailable — same at-rest color as heart/comment. */
+.ig-action-btn.reblog:disabled,
+.ig-action-btn.share:disabled,
+.ig-action-btn.bookmark:disabled { color: var(--ink); }
+.ig-action-btn.is-liked { color: var(--like); }
 .ig-action-btn.is-liked:hover { background: rgba(194, 65, 92, 0.09); color: var(--like); }
-.ig-action-btn.share { margin-left: auto; }
+.ig-action-btn.bookmark { margin-left: auto; }
 
 /* ---------- text ---------- */
 
-.ig-post-likes { padding: 2px 14px 0; margin: 0; font-size: 13.5px; color: var(--muted); }
+/* Semibold and dark, not muted — this is the one count real Instagram
+   treats as primary text rather than metadata. */
+.ig-post-likes { padding: 2px 14px 0; margin: 0; font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .ig-post-likes a, .ig-post-likes strong { color: var(--ink); font-weight: 600; text-decoration: none; }
 
 .ig-post-caption {
@@ -185,16 +203,38 @@
   line-height: 1.5;
   text-wrap: pretty;
 }
+.ig-post-caption.is-clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
 .ig-post-caption strong { font-weight: 650; }
 .ig-post-caption .hashtag { color: var(--accent); font-weight: 550; }
+/* Sits below the (possibly clamped) caption rather than inline at its
+   end — anything placed inside is-clamped's own text would just get cut
+   off by the clamp along with the rest of the overflow. */
+.ig-post-caption-more {
+  display: block;
+  margin: 2px 14px 0;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.ig-post-caption-more:hover { color: var(--ink); }
 
 /* ---------- comments ---------- */
 
 .ig-post-comments-toggle {
-  align-self: flex-start;
+  display: block;
   background: none;
   border: none;
   padding: 0;
+  margin: 6px 14px 0;
   color: var(--muted);
   font-size: 13.5px;
   font-family: inherit;
@@ -203,8 +243,19 @@
 }
 .ig-post-comments-toggle:hover { color: var(--ink); }
 
+/* Bottom timestamp — real Instagram moved this out of the header
+   entirely, down here below the comments link instead. */
+.ig-post-time {
+  display: block;
+  margin: 4px 14px 0;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+  text-transform: uppercase;
+}
+
 .ig-post-comments {
-  padding: 10px 14px 14px;
+  padding: 10px 14px 4px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -240,15 +291,32 @@
 }
 .ig-comment-delete:hover { color: var(--like); }
 
+/* Persistent "Add a comment" bar — always visible under every post now
+   (not gated behind the "View all N comments" toggle), matching real
+   Instagram. Plain and flat, not a pill/bubble: an avatar, placeholder
+   text, and a "Post" text-button that only appears once you've actually
+   typed something, same as the real thing. */
 .ig-comment-form {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  background: var(--sunk);
-  border: 1px solid rgba(37, 23, 20, 0.1);
-  border-radius: 10px;
-  padding: 6px 6px 6px 12px;
+  padding: 10px 14px 12px;
+  margin-top: 4px;
+  border-top: 1px solid var(--line-soft);
 }
+.ig-comment-form-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--placeholder);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+.ig-comment-form-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .ig-comment-form input {
   flex-grow: 1;
   min-width: 0;
@@ -259,21 +327,20 @@
   font-family: inherit;
   color: var(--ink);
 }
+.ig-comment-form input::placeholder { color: var(--faint); }
 .ig-comment-form button {
   flex-shrink: 0;
-  background: var(--accent);
-  color: #fff;
+  background: none;
+  color: var(--accent);
   border: none;
-  border-radius: 7px;
-  padding: 6px 14px;
-  font-weight: 600;
+  padding: 0;
+  font-weight: 650;
   font-size: 13.5px;
   font-family: inherit;
   cursor: pointer;
-  transition: background 120ms ease;
 }
-.ig-comment-form button:hover { background: var(--accent-hover); }
-.ig-comment-form button:disabled { background: #d6cec7; cursor: default; }
+.ig-comment-form button:hover { color: var(--accent-hover); }
+.ig-comment-form button:disabled { color: var(--faint); cursor: default; }
 
 /* "Act as" dropdown — opens when liking/commenting with no character
    chosen yet for this platform (a feed that mixes platforms can't just
