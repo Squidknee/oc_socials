@@ -305,7 +305,7 @@
   gap: 16px;
   padding: 20px 24px 16px;
 }
-.hub-panel-title { font-family: Agdasima, sans-serif; font-size: 1.125rem; color: var(--color-text); }
+.hub-panel-title { font-family: Agdasima, sans-serif; font-size: 1.3rem; color: var(--color-text-dim); }
 .hub-panel-note { font-family: Agdasima, sans-serif; font-size: 0.95rem; color: var(--color-text-dim); }
 .hub-panel-label {
   font-family: Agdasima, sans-serif;
