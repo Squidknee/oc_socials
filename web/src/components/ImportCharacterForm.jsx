@@ -103,6 +103,7 @@ export default function ImportCharacterForm({ worldId, onImported, onCancel }) {
           <label>
             Handle in this world
             <input
+              className="handle-input"
               type="text"
               value={handle}
               onChange={(e) => setHandle(e.target.value)}

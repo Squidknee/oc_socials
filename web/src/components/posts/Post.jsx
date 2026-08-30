@@ -25,7 +25,17 @@ const SKINS = {
 // level (not local to this post's own component) so it survives the
 // list re-rendering/reordering and only actually resets when the page
 // itself unmounts or the browser reloads.
-export default function Post({ post, viewerAccountId, candidateAccounts, likedAsAccountId, onLikedAsAccountIdChange }) {
+//
+// browsingAsAccountId is deliberately separate from viewerAccountId — a
+// profile page (TwitterProfile/InstagramProfile) still has a "your first
+// account on this platform" guess (fetchViewerAccountId) available, but
+// that guess can be the wrong one of your characters, so it must never
+// drive anything that writes content (a like, a comment — that's what
+// viewerAccountId/candidateAccounts are for, and why profile pages pass
+// viewerAccountId={null} like every other page now). It's only safe for
+// read-only cosmetic guesses where being wrong costs nothing real: the
+// header's Follow/Following indicator, "Liked by X."
+export default function Post({ post, viewerAccountId, candidateAccounts, likedAsAccountId, onLikedAsAccountIdChange, browsingAsAccountId }) {
   const slug = post.platform_accounts?.platforms?.slug;
   const Skin = SKINS[slug];
 
@@ -41,6 +51,7 @@ export default function Post({ post, viewerAccountId, candidateAccounts, likedAs
       candidateAccounts={candidateAccounts}
       likedAsAccountId={likedAsAccountId}
       onLikedAsAccountIdChange={onLikedAsAccountIdChange}
+      browsingAsAccountId={browsingAsAccountId}
     />
   );
 }

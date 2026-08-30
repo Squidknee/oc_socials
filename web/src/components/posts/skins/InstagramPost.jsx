@@ -12,7 +12,7 @@ import PostComposer from '../../composer/PostComposer.jsx';
 import '../posts.css';
 
 // Renders one post the way this world's "Instagram" would show it.
-export default function InstagramPost({ post: postProp, viewerAccountId, candidateAccounts = [], likedAsAccountId, onLikedAsAccountIdChange }) {
+export default function InstagramPost({ post: postProp, viewerAccountId, candidateAccounts = [], likedAsAccountId, onLikedAsAccountIdChange, browsingAsAccountId }) {
   const { user } = useAuth();
   // Local copy so a successful edit reflects immediately without needing
   // to thread an update callback up through every page that renders a
@@ -33,13 +33,15 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
   const [deleted, setDeleted] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [captionExpanded, setCaptionExpanded] = useState(false);
-  // Only meaningful with a real fixed viewerAccountId (a profile's own
-  // post list) — a mixed feed with no established identity has no "are
-  // you following them" to answer any more than it has a fixed "have you
-  // liked this," so this just always reads as not-following there.
+  // browsingAsAccountId, not viewerAccountId — only ever set on a profile
+  // page (a real, if imperfect, "your first account here" guess), never
+  // on a mixed feed with no established identity at all. Read-only and
+  // cosmetic, so an occasionally-wrong guess here just means the wrong
+  // one of your characters' follow status shows — unlike a like/comment,
+  // it never writes anything under the wrong name.
   const { following, toggleFollow, busy: followBusy } = useFollow({
     followedAccountId: account?.id,
-    viewerAccountId,
+    viewerAccountId: browsingAsAccountId,
     worldId: account?.world_id,
   });
   // Nothing here ever persists a chosen account — every like/comment
@@ -120,17 +122,19 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
 
   // "Liked by" prefers someone the viewer actually follows, so it reads as
   // a genuine social signal rather than a random name — Instagram-only,
-  // since Twitter's spec didn't call for this.
+  // since Twitter's spec didn't call for this. browsingAsAccountId, not
+  // viewerAccountId — read-only, so the profile page's imperfect "your
+  // first account" guess is an acceptable source for it (see Post.jsx).
   useEffect(() => {
     async function fetchLikedByFollow() {
-      if (!viewerAccountId || likeRows.length === 0) {
+      if (!browsingAsAccountId || likeRows.length === 0) {
         setLikedByName(null);
         return;
       }
       const { data: followed } = await supabase
         .from('follows')
         .select('followed_account_id')
-        .eq('follower_account_id', viewerAccountId)
+        .eq('follower_account_id', browsingAsAccountId)
         .in('followed_account_id', likeRows.map((r) => r.platform_account_id));
 
       const followedIds = new Set((followed ?? []).map((f) => f.followed_account_id));
@@ -138,7 +142,7 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
       setLikedByName(match?.platform_accounts?.display_name ?? null);
     }
     fetchLikedByFollow();
-  }, [viewerAccountId, likeRows]);
+  }, [browsingAsAccountId, likeRows]);
 
   // Every hook above must run every render regardless — only bail out to
   // nothing once React's own bookkeeping for this render is done.
@@ -168,7 +172,7 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
         <div className="ig-post-headerinfo">
           <Link className="ig-post-handle" to={`/accounts/${account?.id}`}>{account?.handle}</Link>
           {account?.verified && <VerifiedBadge size={13} />}
-          {!isOwnPost && viewerAccountId && (
+          {!isOwnPost && browsingAsAccountId && (
             following ? (
               <span className="ig-post-following">· Following</span>
             ) : (
@@ -199,12 +203,19 @@ export default function InstagramPost({ post: postProp, viewerAccountId, candida
           )}
           {media.length > 1 && (
             <>
-              <button className="ig-carousel-nav prev" type="button" onClick={() => setMediaIndex((i) => (i - 1 + media.length) % media.length)} aria-label="Previous">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-              </button>
-              <button className="ig-carousel-nav next" type="button" onClick={() => setMediaIndex((i) => (i + 1) % media.length)} aria-label="Next">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
-              </button>
+              {/* No wraparound — real Instagram's carousel stops at each
+                  end instead of cycling, so the arrow for a direction
+                  with nowhere left to go just isn't there. */}
+              {mediaIndex > 0 && (
+                <button className="ig-carousel-nav prev" type="button" onClick={() => setMediaIndex((i) => i - 1)} aria-label="Previous">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                </button>
+              )}
+              {mediaIndex < media.length - 1 && (
+                <button className="ig-carousel-nav next" type="button" onClick={() => setMediaIndex((i) => i + 1)} aria-label="Next">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+                </button>
+              )}
               <span className="ig-carousel-counter">{mediaIndex + 1}/{media.length}</span>
               <div className="ig-carousel-dots">
                 {media.map((_, i) => (

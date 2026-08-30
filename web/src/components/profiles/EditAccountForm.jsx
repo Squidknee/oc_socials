@@ -50,7 +50,7 @@ export default function EditAccountForm({ account, onSaved, onCancel }) {
 
       <div className="field">
         <label htmlFor="acct-handle">Handle</label>
-        <input id="acct-handle" type="text" value={handle} onChange={(e) => setHandle(e.target.value)} required />
+        <input id="acct-handle" className="handle-input" type="text" value={handle} onChange={(e) => setHandle(e.target.value)} required />
       </div>
       <div className="field">
         <label htmlFor="acct-name">Display name</label>

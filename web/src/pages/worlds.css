@@ -347,7 +347,9 @@
 .char-info { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .char-name { font-family: Aldrich, sans-serif; font-size: 1.0625rem; color: var(--color-text); text-decoration: none; }
 .char-name:hover { color: var(--color-accent); }
-.char-meta { font-family: Agdasima, sans-serif; font-size: 0.95rem; color: var(--color-text-dim); }
+/* system-ui, not Agdasima — this renders "@handle" text, and Agdasima's
+   underscore glyph is functionally invisible at this size. */
+.char-meta { font-family: system-ui, sans-serif; font-size: 0.95rem; color: var(--color-text-dim); }
 
 .char-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .char-icon-btn {
@@ -458,4 +460,5 @@
 .side-char-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .side-char-text { min-width: 0; display: flex; flex-direction: column; }
 .side-char-name { font-family: Aldrich, sans-serif; font-size: 0.94rem; color: var(--color-text); }
-.side-char-handle { font-family: Agdasima, sans-serif; font-size: 0.9rem; color: var(--color-text-dim); }
+/* system-ui, not Agdasima — same underscore-visibility issue as .char-meta. */
+.side-char-handle { font-family: system-ui, sans-serif; font-size: 0.9rem; color: var(--color-text-dim); }

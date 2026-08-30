@@ -208,6 +208,13 @@ body {
 .field input:focus, .field textarea:focus { border-color: var(--color-accent); background: var(--overlay-2); }
 .field textarea { min-height: 100px; resize: vertical; }
 
+/* Handles specifically (not other .field inputs) — Agdasima's underscore
+   glyph renders as good as invisible at normal input sizes, which is a
+   real problem for a character that's meaningful in a handle. system-ui
+   (the OS's own UI font) renders it clearly, same as it already does in
+   the Twitter/Instagram post skins. */
+.handle-input { font-family: system-ui, sans-serif; }
+
 .input-row {
   display: flex;
   align-items: center;

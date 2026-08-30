@@ -104,6 +104,7 @@ export default function CopyCharacterForm({ character, onCopied, onCancel }) {
       <label>
         Handle in that world
         <input
+          className="handle-input"
           type="text"
           value={handle}
           onChange={(e) => setHandle(e.target.value)}

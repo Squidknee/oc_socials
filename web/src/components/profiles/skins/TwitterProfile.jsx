@@ -17,7 +17,24 @@ export default function TwitterProfile({ account, isOwner, onAccountUpdated }) {
   const [loading, setLoading] = useState(true);
   const [composerOpen, setComposerOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  // Only ever used for the Follow button below — "which of my accounts am
+  // I following as" tolerates a silent first-match guess better than post
+  // interactions do (see interactionAccountId below).
   const [viewerAccountId, setViewerAccountId] = useState(null);
+  const [candidateAccounts, setCandidateAccounts] = useState([]);
+  // This account's own page is NOT an ambiguous context the way a mixed
+  // feed is — you're looking at Grant's profile, so commenting here is
+  // obviously as Grant, no picker needed. isOwner already means "you can
+  // act as this account" (own it, or it's public — platform_accounts_
+  // update_shared/posts_insert_own_platform_account, 0029, are the real
+  // enforcement). Only falls through to the candidateAccounts picker
+  // (letting you reply as one of your OWN characters) when it's actually
+  // someone else's account and there's a real choice to make.
+  const interactionAccountId = isOwner ? account.id : null;
+  // Which account each post was liked as, for the heart's filled state
+  // (see Post.jsx) — same reasoning as WorldFeed/PlatformFeedPage's own
+  // copy of this.
+  const [likedAsAccountByPost, setLikedAsAccountByPost] = useState({});
   const { following, toggleFollow, busy: followBusy, followerCount, followingCount } = useFollow({
     followedAccountId: account.id,
     viewerAccountId,
@@ -34,10 +51,39 @@ export default function TwitterProfile({ account, isOwner, onAccountUpdated }) {
     setLoading(false);
   }
 
+  async function fetchCandidateAccounts() {
+    // Every character you own here, PLUS every public/shared character
+    // (can_act_as_character, 0029, is the real enforcement) — same
+    // candidate pool WorldFeed/PlatformFeedPage offer.
+    const { data } = await supabase
+      .from('characters')
+      .select('id, display_name, avatar_url, platform_accounts ( id, platform_id )')
+      .eq('world_id', account.world_id)
+      .or(`owner_id.eq.${user.id},is_public.eq.true`);
+
+    const accounts = [];
+    for (const character of data ?? []) {
+      for (const acc of character.platform_accounts ?? []) {
+        // account.platform_id itself isn't selected anywhere this account
+        // prop comes from — only the joined platforms(*) object is —
+        // so this compares against the joined platform's own id instead.
+        if (acc.platform_id !== account.platforms?.id) continue;
+        accounts.push({
+          accountId: acc.id,
+          characterId: character.id,
+          displayName: character.display_name,
+          avatarUrl: character.avatar_url,
+        });
+      }
+    }
+    setCandidateAccounts(accounts);
+  }
+
   useEffect(() => {
     fetchPosts();
+    fetchCandidateAccounts();
     fetchViewerAccountId({ worldId: account.world_id, platformSlug: 'twitter', userId: user.id }).then(setViewerAccountId);
-  }, [account.id, account.world_id, user.id]);
+  }, [account.id, account.world_id, account.platforms?.id, user.id]);
 
   return (
     <div className="profile-page">
@@ -131,7 +177,18 @@ export default function TwitterProfile({ account, isOwner, onAccountUpdated }) {
         ) : posts.length === 0 ? (
           <p className="profile-empty">No tweets yet.</p>
         ) : (
-          posts.map((post) => <Post key={post.id} post={post} viewerAccountId={viewerAccountId} />)
+          posts.map((post) => (
+            <Post
+              key={post.id}
+              post={post}
+              viewerAccountId={interactionAccountId}
+              candidateAccounts={candidateAccounts}
+              likedAsAccountId={likedAsAccountByPost[post.id]}
+              onLikedAsAccountIdChange={(accountId) =>
+                setLikedAsAccountByPost((prev) => ({ ...prev, [post.id]: accountId }))
+              }
+            />
+          ))
         )}
       </div>
     </div>

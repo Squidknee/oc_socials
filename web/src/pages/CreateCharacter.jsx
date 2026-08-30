@@ -96,7 +96,7 @@ export default function CreateCharacter() {
             <label htmlFor="handle">Handle</label>
             <div className="input-row">
               <span className="input-prefix">@</span>
-              <input id="handle" type="text" value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="rustyknight" required />
+              <input id="handle" className="handle-input" type="text" value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="rustyknight" required />
             </div>
           </div>
 

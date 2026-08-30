@@ -38,6 +38,12 @@ export function usePostInteractions(post, viewerAccountId, { likedAsAccountId, o
   // seen this row" check the way likeRows' own list does, so this stands
   // in for one to stop your own comment being counted twice.
   const seenCommentIds = useRef(new Set());
+  // Same idea for deletes — deleteComment decrements immediately instead
+  // of waiting on a realtime echo that isn't guaranteed to arrive (that
+  // used to be the only place commentCount went down, so a dropped event
+  // left the count stuck too high forever). This just stops that same
+  // echo, if it does show up, from decrementing a second time.
+  const removedCommentIds = useRef(new Set());
 
   useEffect(() => {
     async function fetchMedia() {
@@ -122,14 +128,11 @@ export function usePostInteractions(post, viewerAccountId, { likedAsAccountId, o
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'comments', filter: `post_id=eq.${post.id}` },
         (payload) => {
-          // The sole place commentCount is decremented — deleteComment
-          // below relies on this same event firing for its own deletion
-          // too (RLS lets you see your own writes), rather than also
-          // decrementing itself. seenCommentIds has no record of comments
-          // loaded before this component mounted (fetchCommentCount only
-          // ever got a number, never ids), so a dedupe-by-seen check here
-          // would silently skip decrementing exactly those — simpler and
-          // correct to just always decrement once, in this one spot.
+          // Someone else's delete (or one of your own from another tab)
+          // still needs to land here — only skip when THIS session's own
+          // deleteComment already decremented for this exact id.
+          if (removedCommentIds.current.has(payload.old.id)) return;
+          removedCommentIds.current.add(payload.old.id);
           setCommentCount((n) => Math.max(0, n - 1));
           setComments((prev) => prev.filter((c) => c.id !== payload.old.id));
         }
@@ -207,14 +210,15 @@ export function usePostInteractions(post, viewerAccountId, { likedAsAccountId, o
 
   async function deleteComment(commentId) {
     // comments_delete_own_platform_account (0026) is the real
-    // enforcement. commentCount isn't touched here — the realtime DELETE
-    // handler above does it, since it fires for this deletion too and is
-    // the one place that avoids double-decrementing.
+    // enforcement. Decrements immediately rather than waiting on the
+    // realtime DELETE echo — see removedCommentIds above for why.
     const { error } = await supabase.from('comments').delete().eq('id', commentId);
     if (error) {
       alert(`Couldn't delete comment: ${error.message}`);
       return;
     }
+    removedCommentIds.current.add(commentId);
+    setCommentCount((n) => Math.max(0, n - 1));
     setComments((prev) => prev.filter((c) => c.id !== commentId));
   }
 

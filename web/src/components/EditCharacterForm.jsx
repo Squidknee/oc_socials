@@ -62,7 +62,7 @@ export default function EditCharacterForm({ character, onSaved, onCancel }) {
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', paddingTop: '1rem' }}>
       <div className="field">
         <label htmlFor="edit-char-handle">Handle</label>
-        <input id="edit-char-handle" type="text" value={handle} onChange={(e) => setHandle(e.target.value)} required />
+        <input id="edit-char-handle" className="handle-input" type="text" value={handle} onChange={(e) => setHandle(e.target.value)} required />
       </div>
       <div className="field">
         <label htmlFor="edit-char-name">Display name</label>
