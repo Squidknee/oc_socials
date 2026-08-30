@@ -347,7 +347,9 @@
    default to one), and closes again the instant you pick, since nothing
    here persists a choice between interactions. Anchored to
    .ig-post-actions (position: relative, above), so it appears in the
-   same spot whether opened from the like button or the comment box. */
+   same spot whether opened from the like button or the comment box.
+   Dismissible by clicking anywhere outside it (useClickOutside), not
+   just by picking an option. */
 .ig-account-dropdown {
   position: absolute;
   top: 100%;
@@ -370,6 +372,28 @@
   color: var(--muted);
   padding: 4px 8px 2px;
 }
+/* Shown instead of the account list when candidateAccounts is empty —
+   a brand-new world member with no character yet, not something to
+   leave as a dead, disabled button. */
+.ig-account-dropdown-empty {
+  width: 220px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ig-account-dropdown-empty p { margin: 0; font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
+.ig-account-dropdown-cta {
+  align-self: flex-start;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ig-account-dropdown-cta:hover { background: var(--accent-hover); }
 .ig-account-dropdown-item {
   display: flex;
   align-items: center;
